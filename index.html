@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>App Entrenamiento Pro</title>
+    
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0d0d12">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- DISEÑO MODO OSCURO PREMIUM (GLASSMORPHISM PRO) --- */
+        :root {
+            --primario: #007AFF;
+            --primario-glow: rgba(0, 122, 255, 0.4);
+            --secundario: #5E5CE6;
+            --exito: #34C759;
+            --exito-glow: rgba(52, 199, 89, 0.35);
+            --alerta: #FF9F0A;
+            --alerta-glow: rgba(255, 159, 10, 0.35);
+            --peligro: #FF453A;
+            --cian: #32ADE6;
+            
+            --glass-bg: rgba(28, 28, 36, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.09);
+            --glass-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+            
+            --texto: #F5F5F7;
+            --texto-secundario: #A1A1A6;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #09090d 0%, #161622 100%);
+            color: var(--texto); 
+            margin: 0; 
+            padding: 15px; 
+            padding-bottom: 110px; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before, body::after {
+            content: ''; position: fixed; border-radius: 50%; filter: blur(90px); z-index: -1; opacity: 0.45; pointer-events: none;
+        }
+        body::before {
+            width: 320px; height: 320px; background: rgba(0, 122, 255, 0.18); top: -60px; left: -100px;
+        }
+        body::after {
+            width: 280px; height: 280px; background: rgba(52, 199, 89, 0.12); bottom: 80px; right: -60px;
+        }
+
+        .contenedor { max-width: 600px; width: 100%; position: relative; z-index: 1; }
+        
+        h1 { text-align: center; color: var(--texto); margin-bottom: 20px; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+        h2 { color: var(--texto); font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 14px; letter-spacing: -0.3px; }
+
+        .tarjeta { 
+            background: var(--glass-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 22px; 
+            padding: 22px; 
+            margin-bottom: 18px; 
+            border: 1px solid var(--glass-border); 
+            box-shadow: var(--glass-shadow); 
+        }
+        
+        select, input, textarea { 
+            width: 100%; 
+            padding: 14px 16px; 
+            margin-bottom: 12px; 
+            background: rgba(0, 0, 0, 0.28); 
+            color: var(--texto); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; 
+            font-size: 15px; 
+            font-family: 'Inter', sans-serif;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--primario);
+            box-shadow: 0 0 0 3px var(--primario-glow);
+            background: rgba(0, 0, 0, 0.45);
+        }
+        select option { background: #1a1a24; color: white; }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .btn-principal { 
+            width: 100%; 
+            padding: 16px; 
+            border: none; 
+            border-radius: 14px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            letter-spacing: 0.3px;
+            color: white; 
+            background: linear-gradient(135deg, #007AFF, #0051B3);
+            box-shadow: 0 4px 15px var(--primario-glow);
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            display: flex; justify-content: center; align-items: center; gap: 8px; 
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-principal:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .btn-principal:active { transform: translateY(1px) scale(0.98); opacity: 0.92; }
+        
+        .btn-exito { background: linear-gradient(135deg, var(--exito), #248A3D); box-shadow: 0 4px 15px var(--exito-glow); }
+        .btn-peligro { background: linear-gradient(135deg, var(--peligro), #C1352A); box-shadow: 0 4px 15px rgba(255, 69, 58, 0.3); }
+        .btn-alerta { background: linear-gradient(135deg, var(--alerta), #C97800); box-shadow: 0 4px 15px var(--alerta-glow); color: #000; }
+        .btn-secundario { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border); box-shadow: none; color: var(--texto); }
+
+        /* --- SELECTOR DE DÍAS Y TARJETAS DE RUTINA --- */
+        .dias-selector { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 6px; scrollbar-width: none; }
+        .dias-selector::-webkit-scrollbar { display: none; }
+        .dia-btn { flex: 0 0 auto; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--texto-secundario); padding: 10px 16px; border-radius: 18px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .dia-btn.activo { background: var(--primario); color: white; border-color: var(--primario); box-shadow: 0 4px 12px var(--primario-glow); }
+
+        .turno-divisor {
+            font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--cian); margin: 16px 0 8px 0; display: flex; align-items: center; gap: 8px;
+        }
+        .turno-divisor::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+
+        .rutina-hoy-card { 
+            background: rgba(0,0,0,0.28); padding: 16px 18px; border-radius: 16px; margin-bottom: 10px; 
+            border: 1px solid var(--glass-border); display: flex; justify-content: space-between; 
+            align-items: center; position: relative; overflow: hidden; transition: transform 0.2s;
+        }
+        .rutina-hoy-card::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--primario); }
+        .rutina-hoy-card.cat-campo::before { background: var(--alerta); }
+        .rutina-hoy-card.cat-core::before { background: var(--secundario); }
+        .rutina-hoy-card.cat-movilidad::before { background: var(--cian); }
+        .rutina-hoy-card.cat-caminata::before { background: var(--exito); }
+        .rutina-hoy-card strong { display: block; font-size: 16px; font-weight: 700; color: white; margin-bottom: 4px; }
+        .rutina-hoy-card span { font-size: 12px; color: var(--texto-secundario); display: block; }
+        .badge-meta { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px; background: rgba(255,255,255,0.07); color: #ddd; margin-top: 6px; margin-right: 4px; }
+        .btn-play-chico { width: 44px; height: 44px; min-width: 44px; padding: 0; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; margin-left: 10px; }
+
+        /* --- PANTALLA 1: VISTA PREVIA DE RUTINA (PANTALLA INTERMEDIA) --- */
+        .previa-lista-item {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .previa-num {
+            width: 30px; height: 30px; min-width: 30px; border-radius: 50%;
+            background: rgba(0, 122, 255, 0.2); border: 1px solid var(--primario);
+            color: var(--primario); font-weight: 800; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .previa-info { flex: 1; }
+        .previa-info strong { display: block; font-size: 15px; color: white; margin-bottom: 4px; }
+        .previa-tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--texto-secundario); }
+        .previa-tag { background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px; }
+
+        /* --- PANTALLA 2: TEMPORIZADOR HIIT / INTERVALOS CONSECUTIVOS --- */
+        .hiit-builder-row {
+            display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.25);
+            padding: 10px 12px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border);
+        }
+        .hiit-builder-row input, .hiit-builder-row select { margin-bottom: 0; padding: 10px; font-size: 14px; }
+        .hiit-preset-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 14px; scrollbar-width: none; }
+        .hiit-preset-chips::-webkit-scrollbar { display: none; }
+        .hiit-chip {
+            flex: 0 0 auto; background: rgba(255, 159, 10, 0.12); border: 1px solid rgba(255, 159, 10, 0.35);
+            color: var(--alerta); padding: 7px 12px; border-radius: 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+        }
+        .hiit-display-box {
+            text-align: center; padding: 24px 15px; border-radius: 20px;
+            background: rgba(0,0,0,0.35); border: 2px solid var(--glass-border); margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+        .hiit-display-box.fase-trabajo { border-color: var(--exito); box-shadow: 0 0 25px rgba(52, 199, 89, 0.2); }
+        .hiit-display-box.fase-descanso { border-color: var(--cian); box-shadow: 0 0 25px rgba(50, 173, 230, 0.2); }
+        .hiit-reloj-grande { font-size: 72px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin: 10px 0; }
+
+        /* --- PANTALLA DE EJECUCIÓN Y PERSONITA ANIMADA (GUÍA TÉCNICA) --- */
+        .ejercicio-header { text-align: center; margin-bottom: 18px; }
+        .ejercicio-titulo { font-size: 24px; color: white; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+        .ejercicio-tipo { font-size: 11px; font-weight: 800; text-transform: uppercase; background: rgba(0, 122, 255, 0.15); padding: 5px 12px; border-radius: 20px; display: inline-block; color: #4DA3FF; border: 1px solid rgba(0, 122, 255, 0.3); }
+
+        .btn-guia-tecnica {
+            width: 100%; padding: 11px 14px; margin-bottom: 16px; border-radius: 12px;
+            background: rgba(94, 92, 230, 0.15); border: 1px solid rgba(94, 92, 230, 0.4);
+            color: #B4B2FF; font-size: 13px; font-weight: 700; cursor: pointer;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-guia-tecnica.activo { background: var(--secundario); color: white; }
+
+        .panel-guia-tecnica {
+            background: rgba(12, 12, 18, 0.75); border: 1px solid rgba(94, 92, 230, 0.4);
+            border-radius: 18px; padding: 16px; margin-bottom: 20px; animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .escenario-animacion {
+            width: 100%; height: 190px; background: radial-gradient(circle at center, rgba(0, 122, 255, 0.12) 0%, rgba(0,0,0,0.5) 100%);
+            border-radius: 14px; border: 1px solid var(--glass-border); display: flex;
+            align-items: center; justify-content: center; margin-bottom: 14px; position: relative; overflow: hidden;
+        }
+        .badge-tempo {
+            position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.65);
+            border: 1px solid var(--glass-border); padding: 4px 9px; border-radius: 8px;
+            font-size: 11px; font-weight: 700; color: var(--alerta);
+        }
+        .guia-grid { display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 12.5px; }
+        .guia-item { background: rgba(255,255,255,0.04); padding: 9px 12px; border-radius: 10px; border-left: 3px solid var(--primario); }
+        .guia-item strong { color: white; display: block; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .guia-item span { color: var(--texto-secundario); line-height: 1.4; display: block; }
+
+        /* --- ANIMACIONES SVG DE LA PERSONITA --- */
+        .svg-entrenador { width: 170px; height: 170px; }
+        .figura-cuerpo { stroke: #00E5FF; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; fill: none; filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.45)); }
+        .figura-cabeza { fill: #00E5FF; filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.5)); }
+        .figura-equipo { stroke: #FF9F0A; stroke-width: 4.5; stroke-linecap: round; fill: none; }
+        .figura-banco { stroke: rgba(255,255,255,0.3); stroke-width: 5; stroke-linecap: round; fill: none; }
+        .figura-cono { fill: #FF9F0A; }
+
+        @keyframes anim-subir-bajar { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-22px); } }
+        @keyframes anim-sentadilla { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(22px); } }
+        @keyframes anim-traccion { 0%, 100% { transform: translateY(-18px); } 50% { transform: translateY(8px); } }
+        @keyframes anim-remo { 0%, 100% { transform: translate(0px, 0px); } 50% { transform: translate(-12px, -10px); } }
+        @keyframes anim-vuelo-izq { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(55deg); } }
+        @keyframes anim-vuelo-der { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-55deg); } }
+        @keyframes anim-curl { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-65deg); } }
+        @keyframes anim-sprint-pierna1 { 0%, 100% { transform: rotate(-28deg); } 50% { transform: rotate(28deg); } }
+        @keyframes anim-sprint-pierna2 { 0%, 100% { transform: rotate(28deg); } 50% { transform: rotate(-28deg); } }
+        @keyframes anim-salto { 0%, 100% { transform: translate(0px, 0px); } 50% { transform: translate(18px, -24px); } }
+        @keyframes anim-pulso-core { 0%, 100% { opacity: 0.4; r: 8px; } 50% { opacity: 1; r: 14px; } }
+
+        .mov-empuje { animation: anim-subir-bajar 2.2s infinite ease-in-out; }
+        .mov-sentadilla { animation: anim-sentadilla 2.4s infinite ease-in-out; }
+        .mov-traccion { animation: anim-traccion 2.2s infinite ease-in-out; }
+        .mov-remo { animation: anim-remo 2s infinite ease-in-out; }
+        .mov-vuelo-izq { transform-origin: 68px 65px; animation: anim-vuelo-izq 2s infinite ease-in-out; }
+        .mov-vuelo-der { transform-origin: 92px 65px; animation: anim-vuelo-der 2s infinite ease-in-out; }
+        .mov-curl { transform-origin: 82px 78px; animation: anim-curl 2s infinite ease-in-out; }
+        .mov-pierna-a { transform-origin: 80px 92px; animation: anim-sprint-pierna1 0.65s infinite ease-in-out; }
+        .mov-pierna-b { transform-origin: 80px 92px; animation: anim-sprint-pierna2 0.65s infinite ease-in-out; }
+        .mov-salto { animation: anim-salto 1.6s infinite ease-in-out; }
+        .mov-core { animation: anim-pulso-core 1.8s infinite ease-in-out; fill: rgba(52, 199, 89, 0.5); }
+
+        .grid-datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+        .dato-caja { background: rgba(0, 0, 0, 0.25); padding: 13px 8px; border-radius: 16px; text-align: center; border: 1px solid var(--glass-border); }
+        .dato-caja span { display: block; font-size: 10px; font-weight: 700; color: var(--texto-secundario); text-transform: uppercase; margin-bottom: 8px; }
+        
+        .select-unidad {
+            display: block; font-size: 10px; font-weight: 700; color: var(--texto-secundario); 
+            text-transform: uppercase; margin-bottom: 8px; background: transparent; border: none; 
+            width: 100%; text-align: center; text-align-last: center; cursor: pointer;
+            appearance: none; -webkit-appearance: none; padding: 0;
+        }
+
+        .input-progreso { background: transparent; border: none; color: white; font-size: 24px; font-weight: 800; text-align: center; padding: 0; margin: 0; width: 100%; }
+        .input-progreso:focus { outline: none; border-bottom: 2px solid var(--primario); border-radius: 0; background: transparent; box-shadow: none; }
+        select.input-progreso { appearance: none; -webkit-appearance: none; cursor: pointer; font-size: 15px; font-weight: 700; }
+
+        .progreso-series { display: flex; justify-content: center; gap: 9px; margin-bottom: 24px; flex-wrap: wrap; }
+        .bolita-serie { width: 32px; height: 32px; border-radius: 50%; background-color: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--texto-secundario); transition: all 0.3s ease; }
+        .bolita-serie.activa { background-color: var(--alerta); border-color: var(--alerta); color: #000; box-shadow: 0 0 15px rgba(255, 159, 10, 0.4); transform: scale(1.1); }
+        .bolita-serie.completada { background-color: var(--exito); border-color: var(--exito); color: #000; }
+
+        .reloj-contenedor { text-align: center; margin: 30px 0; }
+        .reloj-display { font-size: 80px; font-weight: 300; font-family: 'Inter', sans-serif; letter-spacing: -2px; color: white; font-variant-numeric: tabular-nums; text-shadow: 0 0 20px rgba(255, 255, 255, 0.2); }
+        .reloj-mensaje { color: var(--primario); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+
+        .oculto { display: none !important; }
+        
+        .historial-item { background: rgba(0,0,0,0.25); padding: 16px; margin-bottom: 10px; border-radius: 16px; border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; }
+        .historial-item::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--exito); }
+        .historial-info p { margin: 5px 0 0 0; font-size: 12.5px; color: var(--texto-secundario); }
+        .historial-volumen { font-size: 15px; font-weight: 800; color: var(--primario); text-align: right; }
+        .historial-nota { font-size: 12px; color: #aaa; margin-top: 8px; font-style: italic; background: rgba(255,255,255,0.04); padding: 6px 10px; border-radius: 8px; }
+
+        details summary { padding: 14px 16px; background: rgba(0,0,0,0.25); border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--texto); border: 1px solid var(--glass-border); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+        details summary::after { content: '+'; font-size: 18px; color: var(--primario); font-weight: 800; }
+        details[open] summary::after { content: '−'; }
+
+        .lista-editor-item { background: rgba(0,0,0,0.25); padding: 14px; border-radius: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--glass-border); }
+        .lista-editor-item p { margin: 0 0 5px 0; font-size: 14.5px; font-weight: 700; }
+        .lista-editor-item small { color: var(--texto-secundario); font-size: 11.5px; background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px; display: inline-block; }
+        .form-fila { display: flex; gap: 10px; }
+        .form-fila input, .form-fila select { flex: 1; }
+
+        .calendario-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; margin-bottom: 15px; }
+        .dia-cal { background: rgba(0,0,0,0.25); padding: 10px 0; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--texto-secundario); border: 1px solid transparent; }
+        .dia-cal.entrenado { background: rgba(52, 199, 89, 0.18); color: var(--exito); border-color: rgba(52, 199, 89, 0.35); }
+        .dia-cal.hoy { border: 2px solid var(--primario); color: white; }
+        .dia-nombre { font-size: 11px; text-transform: uppercase; color: var(--texto-secundario); font-weight: 800; margin-bottom: 8px; letter-spacing: 1px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); display: flex; justify-content: center; align-items: center; z-index: 2000; padding: 20px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+        .modal-content { background: var(--glass-bg); padding: 26px; border-radius: 24px; width: 100%; max-width: 400px; border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .btn-emoji { font-size: 32px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 16px; padding: 14px; flex: 1; cursor: pointer; transition: all 0.2s; }
+        .btn-emoji:hover { background: rgba(255,255,255,0.08); transform: translateY(-3px); }
+
+        .navegacion { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: rgba(20, 20, 26, 0.82); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around; padding: 10px 0 22px 0; z-index: 1000; border-top: 1px solid var(--glass-border); 
+        }
+        .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; background: none; border: none; font-size: 10.5px; font-weight: 600; font-family: 'Inter', sans-serif; color: var(--texto-secundario); cursor: pointer; transition: 0.25s; }
+        .tab-btn i { font-size: 22px; margin-bottom: 4px; font-style: normal; transition: 0.25s; opacity: 0.55; filter: grayscale(100%); }
+        .tab-btn.activo { color: var(--primario); }
+        .tab-btn.activo i { opacity: 1; filter: grayscale(0%); transform: translateY(-2px); }
+
+        .grafico-contenedor { position: relative; height: 240px; width: 100%; margin-top: 20px; }
+        
+        .vtaper-card { 
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(211, 84, 0, 0.2) 100%); 
+            backdrop-filter: blur(10px); border: 1px solid rgba(243, 156, 18, 0.35); color: white; 
+            padding: 22px; border-radius: 20px; text-align: center; margin-bottom: 20px; 
+            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.1); position: relative; overflow: hidden;
+        }
+        .vtaper-card strong { font-size: 40px; font-weight: 800; display: block; margin: 8px 0; color: #F39C12; text-shadow: 0 0 15px rgba(243, 156, 18, 0.4); }
+
+        @keyframes pulso-exito {
+            0% { box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7); transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { box-shadow: 0 0 0 15px rgba(52, 199, 89, 0); transform: scale(1); }
+        }
+        .animar-exito { animation: pulso-exito 0.38s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; background: var(--exito) !important; color: black !important; }
+
+        @keyframes sacudon {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .animar-error { animation: sacudon 0.4s ease; border-color: var(--peligro) !important; }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <h1>⚡ App Entrenamiento Pro</h1>
+
+        <!-- LOGIN -->
+        <div id="vistaLogin" class="tarjeta">
+            <h2>Acceso a la Nube</h2>
+            <input type="email" id="loginEmail" placeholder="Correo electrónico">
+            <input type="password" id="loginPassword" placeholder="Contraseña">
+            <button class="btn-principal" onclick="iniciarSesion()">Ingresar</button>
+            <p id="loginError" style="color: var(--peligro); font-size: 13px; display: none;"></p>
+        </div>
+
+        <!-- APP PRINCIPAL -->
+        <div id="appPrincipal" class="oculto">
+
+            <!-- VISTA 1: INICIO / SELECCIÓN DE RUTINA + CRONÓMETRO HIIT -->
+            <div id="vistaSeleccion">
+                <div class="tarjeta">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h2 style="margin:0;">Planificación Semanal</h2>
+                        <span id="badgeCodigoMD" style="font-size:11px; font-weight:800; padding:4px 10px; border-radius:12px; background:rgba(0,122,255,0.18); color:#4DA3FF;">MD</span>
+                    </div>
+                    <div class="dias-selector" id="uiSelectorDias"></div>
+                    <h2 id="tituloDiaPlan" style="color: var(--primario); font-size: 16px; margin-bottom: 8px;">Rutina de Hoy</h2>
+                    <div id="contenedorRutinasHoy"></div>
+
+                    <details style="margin-top: 18px;">
+                        <summary>Ver todas las sesiones (Entrenamiento Libre)</summary>
+                        <div style="margin-top: 14px;">
+                            <select id="selectorRutina"></select>
+                            <button class="btn-principal" style="padding: 14px;" onclick="abrirVistaPreviaRutina(document.getElementById('selectorRutina').value)">📋 Ver Ejercicios e Iniciar</button>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- CRONÓMETRO PROGRAMABLE DE INTERVALOS CONSECUTIVOS (HIIT / TABATA) -->
+                <div class="tarjeta" style="border-left: 4px solid var(--alerta);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2 style="margin:0;">⏱️ Cronómetro Intervalos / HIIT</h2>
+                        <button class="btn-principal btn-secundario" style="width:auto; padding:6px 12px; font-size:12px;" onclick="toggleConfigHIIT()">⚙️ Configurar</button>
+                    </div>
+                    <p style="font-size: 12px; color: var(--texto-secundario); margin: 6px 0 12px 0;">Programá cuentas regresivas consecutivas y cantidad de ciclos (Ej: 15" x 15" o 45" x 15").</p>
+
+                    <div class="hiit-preset-chips">
+                        <button class="hiit-chip" onclick="cargarPresetHIIT(15, 15, 16, 'HIIT 15s / 15s (8 min)')">⚡ HIIT 15"x15" (16 ciclos)</button>
+                        <button class="hiit-chip" onclick="cargarPresetHIIT(45, 15, 5, 'Intervalos 45s / 15s (5 ciclos)')">🏃 45" Correr / 15" Caminar (x5)</button>
+                        <button class="hiit-chip" onclick="cargarPresetHIIT(20, 20, 12, 'HIIT 20s / 20s (12 ciclos)')">🔥 20"x20" (12 ciclos)</button>
+                        <button class="hiit-chip" onclick="cargarPresetHIIT(30, 30, 10, 'RSA 30s / 30s (10 ciclos)')">⚽ Pasadas 30"x30" (x10)</button>
+                    </div>
+
+                    <div id="panelConfigHIIT" class="oculto" style="margin-bottom: 14px; background: rgba(0,0,0,0.2); padding: 14px; border-radius: 14px; border: 1px solid var(--glass-border);">
+                        <div class="form-fila" style="margin-bottom: 8px;">
+                            <div>
+                                <label style="font-size:11px; color:var(--texto-secundario); font-weight:700;">Ciclos (Repeticiones)</label>
+                                <input type="number" id="hiitInputCiclos" value="5" min="1" max="100" onchange="reiniciarCronometroHIIT()">
+                            </div>
+                            <div>
+                                <label style="font-size:11px; color:var(--texto-secundario); font-weight:700;">Prep. Inicial (seg)</label>
+                                <input type="number" id="hiitInputPrep" value="5" min="0" max="60" onchange="reiniciarCronometroHIIT()">
+                            </div>
+                        </div>
+                        <label style="font-size:11px; color:var(--texto-secundario); font-weight:700; display:block; margin-bottom:6px;">Secuencia de Cuentas Regresivas por Ciclo:</label>
+                        <div id="contenedorFasesHIIT"></div>
+                        <button class="btn-principal btn-secundario" style="padding:10px; font-size:12px; margin-top:6px;" onclick="agregarFaseHIIT()">➕ Añadir otra cuenta regresiva a la secuencia</button>
+                    </div>
+
+                    <div id="hiitCajaVisual" class="hiit-display-box">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--texto-secundario); padding:0 10px;">
+                            <span id="hiitTextoCiclo">CICLO 1 / 5</span>
+                            <span id="hiitTextoTotalRestante">Total: 05:00</span>
+                        </div>
+                        <div id="hiitNombreFaseActual" style="font-size:18px; font-weight:800; color:var(--alerta); margin-top:8px; text-transform:uppercase;">LISTO PARA ARRANCAR</div>
+                        <div id="hiitRelojDisplay" class="hiit-reloj-grande">00:45</div>
+                        <div id="hiitSiguienteFaseInfo" style="font-size:12px; color:var(--texto-secundario);">Siguiente: Caminando / Pausa (15s)</div>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button id="btnHiitPlayPause" class="btn-principal btn-exito" style="flex:2;" onclick="togglePlayHIIT()">▶ Iniciar Intervalos</button>
+                        <button class="btn-principal btn-secundario" style="flex:1;" onclick="reiniciarCronometroHIIT()">↺ Reset</button>
+                    </div>
+                </div>
+                
+                <div class="tarjeta">
+                    <h2>Últimos Entrenamientos</h2>
+                    <div id="listaHistorial">Aún no hay entrenamientos registrados.</div>
+                </div>
+            </div>
+
+            <!-- VISTA 1.5 (NUEVA): PANTALLA INTERMEDIA DE VISTA PREVIA DE EJERCICIOS -->
+            <div id="vistaPreviaRutina" class="oculto">
+                <div class="tarjeta">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--cian);">Vista Previa de Sesión</span>
+                        <span id="previaCantidadEjercicios" style="font-size:12px; font-weight:700; color:var(--texto-secundario);">0 ejercicios</span>
+                    </div>
+                    <h2 id="previaTituloRutina" style="font-size:22px; margin-bottom:6px;">Nombre de Rutina</h2>
+                    <p id="previaSubtituloInfo" style="font-size:12.5px; color:var(--texto-secundario); margin-top:0; margin-bottom:18px;"></p>
+
+                    <div id="contenedorListaPrevia" style="max-height: 55vh; overflow-y: auto; padding-right: 4px; margin-bottom: 20px;"></div>
+
+                    <button class="btn-principal btn-exito" style="margin-bottom: 10px;" onclick="confirmarEIniciarRutina()">🚀 Comenzar Primer Ejercicio</button>
+                    <button class="btn-principal btn-secundario" onclick="cerrarVistaPrevia()">⬅ Volver al Inicio</button>
+                </div>
+            </div>
+
+            <!-- VISTA 2: EDITOR DE RUTINAS -->
+            <div id="vistaEditor" class="oculto">
+                <div class="tarjeta">
+                    <h2>Modificar Rutina</h2>
+                    <p style="font-size: 12px; color: var(--texto-secundario); margin-top: -8px; margin-bottom: 14px;">Agregá, eliminá o reordená ejercicios y descansos.</p>
+                    <select id="editorSelectorRutina" onchange="mostrarEjerciciosEditor()"></select>
+                    <div id="listaEjerciciosEditor" style="margin-top: 15px;"></div>
+                </div>
+
+                <div class="tarjeta" style="border-left: 4px solid var(--alerta);">
+                    <h2>Añadir Ejercicio a la Sesión</h2>
+                    <input type="text" id="nuevoEjNombre" placeholder="Nombre (Ej: Sentadilla Barra)">
+                    <div class="form-fila">
+                        <input type="number" id="nuevoEjSeries" placeholder="Series (Ej: 4)">
+                        <input type="number" id="nuevoEjReps" placeholder="Reps/Seg (Ej: 10)">
+                    </div>
+                    <div class="form-fila">
+                        <input type="number" id="nuevoEjPeso" placeholder="Peso/Dist (Ej: 36)" step="0.5">
+                        <select id="nuevoEjUnidad" style="flex: 0.8;">
+                            <option value="kg">kg</option>
+                            <option value="discos">discos</option>
+                            <option value="seg">seg</option>
+                            <option value="min">min</option>
+                            <option value="m">metros</option>
+                            <option value="reps">reps</option>
+                        </select>
+                    </div>
+                    <div class="form-fila">
+                        <input type="number" id="nuevoEjDescanso" placeholder="Desc. entre series (s)">
+                        <input type="number" id="nuevoEjDescansoEj" placeholder="Desc. tras ejercicio (s)">
+                    </div>
+                    <select id="nuevoEjTipo">
+                        <option value="compuesto">Compuesto / Multiarticular</option>
+                        <option value="aislado">Aislado / Analítico</option>
+                        <option value="campo">Campo / Velocidad / Pliometría</option>
+                        <option value="movilidad">Movilidad / Core</option>
+                    </select>
+                    <button class="btn-principal btn-exito" onclick="agregarEjercicioEditor()">➕ Añadir Ejercicio</button>
+                </div>
+
+                <div class="tarjeta">
+                    <h2>Sincronización del Plan Maestro</h2>
+                    <p style="font-size:12px; color:var(--texto-secundario); margin-top:-6px;">Restaura o actualiza todas las sesiones al plan definitivo (PDF + Quinta 30x20m).</p>
+                    <button class="btn-principal btn-secundario" onclick="restaurarPlanMaestroDefinitivo()">🔄 Cargar Planificación Definitiva Completa</button>
+                </div>
+            </div>
+
+            <!-- VISTA 3: ESTADÍSTICAS Y MÉTRICAS -->
+            <div id="vistaEstadisticas" class="oculto">
+                <div class="vtaper-card">
+                    <span style="font-size: 12px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Tu Ratio V-Taper</span>
+                    <strong id="uiVTaperDisplay">--</strong>
+                    <span style="font-size: 11px;">Objetivo Men's Physique: > 1.618</span>
+                </div>
+
+                <div class="tarjeta">
+                    <h2>Constancia (Mes Actual)</h2>
+                    <div class="calendario-grid" style="border-bottom: none; margin-bottom: 5px;">
+                        <div class="dia-nombre">D</div><div class="dia-nombre">L</div><div class="dia-nombre">M</div>
+                        <div class="dia-nombre">X</div><div class="dia-nombre">J</div><div class="dia-nombre">V</div><div class="dia-nombre">S</div>
+                    </div>
+                    <div class="calendario-grid" id="calendarioDias"></div>
+                </div>
+
+                <div class="tarjeta">
+                    <h2>Volumen de Carga Efectiva (Tonelaje)</h2>
+                    <p style="font-size: 12px; color: var(--texto-secundario); margin-top: -8px;">Suma cargas en kg y conversión automática de discos de polea.</p>
+                    <div class="grafico-contenedor">
+                        <canvas id="chartVolumen"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 4: PERFIL -->
+            <div id="vistaPerfil" class="oculto">
+                <div class="tarjeta">
+                    <h2>👤 Mi Perfil Biométrico</h2>
+                    <p style="font-size: 13px; color: var(--texto-secundario); margin-top: -8px; margin-bottom: 15px;">Mantené tu peso y medidas actualizados para el cálculo calórico y V-Taper.</p>
+                    
+                    <label style="font-size: 12px; color: var(--texto-secundario); font-weight: bold;">Peso Corporal (kg)</label>
+                    <input type="number" id="inputPesoCorporal" placeholder="Tu peso actual (kg)" step="0.1">
+                    
+                    <label style="font-size: 12px; color: var(--texto-secundario); font-weight: bold; margin-top: 10px;">Perímetros (Para Ratio V-Taper)</label>
+                    <div class="form-fila">
+                        <input type="number" id="inputHombros" placeholder="Hombros/Dorsal (cm)" step="0.1">
+                        <input type="number" id="inputCintura" placeholder="Cintura (cm)" step="0.1">
+                    </div>
+
+                    <button class="btn-principal" onclick="guardarPerfil()">💾 Guardar Perfil</button>
+                </div>
+
+                <button class="btn-principal btn-peligro" style="background: transparent; border: 1px solid var(--peligro); box-shadow: none; margin-top: 20px;" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+            </div>
+
+            <!-- VISTA 5: ENTRENAMIENTO ACTIVO + PERSONITA ANIMADA Y GUÍA TÉCNICA -->
+            <div id="vistaEntrenamiento" class="oculto">
+                <div class="tarjeta">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <div id="uiTiempoTotal" style="color: var(--texto-secundario); font-family: monospace; font-size: 14px;">
+                            ⏱️ Sesión: 00:00
+                        </div>
+                        <span id="uiDescansosInfoBadge" style="font-size:11px; color:var(--cian); background:rgba(50,173,230,0.12); padding:4px 9px; border-radius:8px; font-weight:700;">Pausa: 120s | Cambio: 180s</span>
+                    </div>
+
+                    <div class="ejercicio-header">
+                        <p id="uiRutinaNombre" style="color: var(--texto-secundario); font-size: 11.5px; margin: 0 0 6px 0; text-transform: uppercase; font-weight:700;">Pull A</p>
+                        <h2 id="uiEjercicioNombre" class="ejercicio-titulo">Remo con Barra</h2>
+                        <span id="uiEjercicioTipo" class="ejercicio-tipo">Compuesto</span>
+                    </div>
+
+                    <!-- BOTÓN / PESTAÑA DE EJECUCIÓN TÉCNICA Y PERSONITA ANIMADA -->
+                    <button id="btnToggleGuia" class="btn-guia-tecnica" onclick="toggleGuiaTecnica()">
+                        <span>🏃‍♂️ Ver Personita Animada y Técnica Correcta</span>
+                    </button>
+
+                    <!-- PANEL DESPLEGABLE CON ANIMACIÓN SVG Y DETALLES BIOMECÁNICOS -->
+                    <div id="panelGuiaEjercicio" class="panel-guia-tecnica oculto">
+                        <div class="escenario-animacion">
+                            <span id="uiGuiaTempo" class="badge-tempo">Tempo: 2-0-1-0</span>
+                            <div id="contenedorSvgAnimado"></div>
+                        </div>
+                        <div class="guia-grid">
+                            <div class="guia-item">
+                                <strong>📐 Postura y Posición</strong>
+                                <span id="uiGuiaPostura">Espalda neutra, torso firme y escápulas activas.</span>
+                            </div>
+                            <div class="guia-item" style="border-left-color: var(--alerta);">
+                                <strong>✊ Agarre / Calzado y Ejecución</strong>
+                                <span id="uiGuiaAgarre">Agarre firme pronado al ancho de hombros.</span>
+                            </div>
+                            <div class="guia-item" style="border-left-color: var(--exito);">
+                                <strong>⚡ Clave de Máximo Rendimiento</strong>
+                                <span id="uiGuiaClave">Fase concéntrica explosiva manteniendo control excéntrico.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-datos">
+                        <div class="dato-caja">
+                            <span id="labelCajaReps">Reps/Meta</span>
+                            <input type="number" id="uiRepsInput" class="input-progreso">
+                        </div>
+                        <div class="dato-caja" style="position: relative;">
+                            <select id="uiUnidadInput" class="select-unidad">
+                                <option value="kg">KG ▼</option>
+                                <option value="discos">DISCOS ▼</option>
+                                <option value="seg">SEG ▼</option>
+                                <option value="min">MIN ▼</option>
+                                <option value="m">METROS ▼</option>
+                                <option value="reps">REPS ▼</option>
+                            </select>
+                            <input type="number" id="uiPesoInput" class="input-progreso" step="0.5">
+                        </div>
+                        <div class="dato-caja">
+                            <span>Esfuerzo</span>
+                            <select id="uiRirInput" class="input-progreso">
+                                <option value="calentamiento" style="color: var(--alerta);">Calentar</option>
+                                <option value="efectiva" selected style="color: var(--exito);">Efectiva</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="progreso-series" id="uiSeriesVisuales"></div>
+
+                    <button id="btnAccionPrincipal" class="btn-principal" onclick="manejarBotonPrincipal()">
+                        ✔️ Completar Serie 1
+                    </button>
+                    
+                    <button class="btn-principal btn-peligro" style="margin-top: 16px; background: transparent; border: 1px solid var(--peligro); box-shadow: none; padding: 13px;" onclick="cancelarRutina()">
+                        ⏹ Cancelar Entrenamiento
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISTA 6: DESCANSO ENTRE SERIES / ENTRE EJERCICIOS -->
+            <div id="vistaDescanso" class="oculto">
+                <div class="tarjeta" style="text-align: center;">
+                    <span id="badgeTipoPausa" style="font-size:11px; font-weight:800; padding:4px 12px; border-radius:12px; background:rgba(0,122,255,0.2); color:#4DA3FF; text-transform:uppercase;">Descanso entre Series</span>
+                    <p class="reloj-mensaje" id="mensajeDescanso" style="margin-top:12px;">Recuperando ATP y Fosfocreatina...</p>
+                    <div class="reloj-contenedor">
+                        <div id="relojDisplay" class="reloj-display">00:00</div>
+                    </div>
+                    
+                    <!-- ALERTA DE MOVILIDAD INTRASESIÓN (SENTADILLA / HIP THRUST) -->
+                    <div id="alertaMovilidadDescanso" class="oculto" style="background: rgba(50, 173, 230, 0.14); padding: 12px 14px; border-radius: 12px; margin-bottom: 14px; border: 1px solid rgba(50, 173, 230, 0.4); text-align:left;">
+                        <strong style="font-size:11px; color:var(--cian); text-transform:uppercase; display:block; margin-bottom:3px;">🧘‍♂️ Recordatorio de Pausa Activa:</strong>
+                        <span id="textoMovilidadDescanso" style="font-size:13px; color:white;"></span>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primario); text-align:left;">
+                        <span style="font-size: 11px; color: var(--texto-secundario); text-transform: uppercase; font-weight:700;">Preparate para:</span>
+                        <p id="proximoPasoMensaje" style="margin: 4px 0 0 0; font-weight: 700; font-size: 15px; color:white;">Siguiente Serie</p>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-principal btn-alerta" style="flex: 1;" onclick="sumarTiempo(-15)">-15s</button>
+                        <button class="btn-principal btn-alerta" style="flex: 1;" onclick="sumarTiempo(30)">+30s</button>
+                        <button class="btn-principal btn-exito" style="flex: 2;" onclick="saltarDescanso()">Saltar ⏭</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL FIN DE ENTRENAMIENTO -->
+            <div id="modalFatiga" class="modal-overlay oculto">
+                <div class="modal-content">
+                    <h2 style="color: var(--primario); margin-top: 0;">¡Sesión Completada!</h2>
+                    <p style="font-size: 13.5px; color: var(--texto-secundario);">¿Cómo sentiste tu Sistema Nervioso Central (SNC) y energía hoy?</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 18px;">
+                        <button class="btn-emoji" onclick="guardarFatigaYFinalizar('😫 Agotado')" title="Agotado">😫</button>
+                        <button class="btn-emoji" onclick="guardarFatigaYFinalizar('😐 Sólido')" title="Normal / Sólido">😐</button>
+                        <button class="btn-emoji" onclick="guardarFatigaYFinalizar('🦍 Modo Bestia')" title="Modo Bestia">🦍</button>
+                    </div>
+                    
+                    <textarea id="inputNotasRutina" placeholder="Notas (Opcional). Ej: Subí rápido en sentadilla, cancha rápida en la quinta..." style="font-size: 13px;"></textarea>
+                </div>
+            </div>
+
+            <!-- BARRA DE NAVEGACIÓN INFERIOR -->
+            <div class="navegacion" id="navInferior">
+                <button class="tab-btn activo" id="btnTabEntrenar" onclick="cambiarVistaPrincipal('entrenar')">
+                    <i>🏋️</i><span>Entrenar</span>
+                </button>
+                <button class="tab-btn" id="btnTabGestor" onclick="cambiarVistaPrincipal('gestor')">
+                    <i>⚙️</i><span>Editor</span>
+                </button>
+                <button class="tab-btn" id="btnTabMetricas" onclick="cambiarVistaPrincipal('metricas')">
+                    <i>📊</i><span>Métricas</span>
+                </button>
+                <button class="tab-btn" id="btnTabPerfil" onclick="cambiarVistaPrincipal('perfil')">
+                    <i>👤</i><span>Perfil</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, addDoc, query, orderBy, limit, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYNhDmk3lT6ol7FjFPb3Cv121SdQQU6eU",
+            authDomain: "app-entrenamiento-daf51.firebaseapp.com",
+            projectId: "app-entrenamiento-daf51",
+            storageBucket: "app-entrenamiento-daf51.firebasestorage.app",
+            messagingSenderId: "259599764141",
+            appId: "1:259599764141:web:8d2841d173b33ba1455424"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const VERSION_PLAN_MAESTRO = "2026_PRO_V4";
+
+        // =========================================================================
+        // PLANIFICACIÓN MAESTRA DEFINITIVA (PDF[cite: 1, 2] + QUINTA 30m x 20m)
+        // Todas las sesiones individuales incluyen: series, reps, peso, unidad,
+        // descanso (entre series) y descansoEjercicio (entre ejercicios distintos)[cite: 1, 2].
+        // =========================================================================
+        const RUTINAS_DEFAULT = {
+            // --- LUNES ---
+            "pull_a": {
+                nombre: "Pull A: Espalda (Densidad) y Bíceps",
+                turno: "manana", categoria: "fuerza", infoExtra: "Lunes Mañana (Casa) • 6 ejercicios",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Remo con Barra", series: 4, reps: 12, peso: 30, unidad: "kg", descanso: 120, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Jalón al Pecho (Supino)", series: 4, reps: 12, peso: 6, unidad: "discos", descanso: 120, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Remo Polea Baja", series: 3, reps: 12, peso: 6, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Curl Predicador (Banco inclinado)", series: 3, reps: 12, peso: 7, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Curl Martillo", series: 3, reps: 12, peso: 9, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Flexión de Muñeca", series: 3, reps: 20, peso: 20, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "core_a": {
+                nombre: "Core A: Anti-Extensión Abdominal",
+                turno: "manana", categoria: "core", infoExtra: "Lunes Mañana (Casa) • Al finalizar Pull A",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Rueda Abdominal", series: 3, reps: 12, peso: 0, unidad: "kg", descanso: 60, descansoEjercicio: 90, tipo: "movilidad" },
+                    { nombre: "Plancha Abdominal RKC", series: 3, reps: 30, peso: 30, unidad: "seg", descanso: 60, descansoEjercicio: 60, tipo: "movilidad" }
+                ]
+            },
+            "campo_3": {
+                nombre: "Campo 3: HIIT Intermitente + Técnica (30x20m)",
+                turno: "tarde", categoria: "campo", infoExtra: "Lunes Tarde (Quinta 30x20m) • Zapatillas + Botines",
+                ejercicios: [
+                    { nombre: "Entrada en Calor RAMP (Carril 20m: Skipping y Movilidad)", series: 1, reps: 8, peso: 8, unidad: "min", descanso: 0, descansoEjercicio: 90, tipo: "campo" },
+                    { nombre: "HIIT 15s x 15s (Circuito Perimetral Interno 26x16m: ~70m en 15s)", series: 2, reps: 16, peso: 70, unidad: "m", descanso: 240, descansoEjercicio: 150, tipo: "campo" },
+                    { nombre: "Técnica Ahogada con Pelota y Rebote en Pared (Cuadrado 8x8m)", series: 2, reps: 5, peso: 5, unidad: "min", descanso: 60, descansoEjercicio: 90, tipo: "campo" }
+                ]
+            },
+
+            // --- MARTES ---
+            "legs_a": {
+                nombre: "Legs A: Fuerza Dominante de Rodilla",
+                turno: "manana", categoria: "fuerza", infoExtra: "Martes Mañana (Casa) • RIR 2 (Subida explosiva)",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Sentadilla Barra (Trasera)", series: 4, reps: 8, peso: 36, unidad: "kg", descanso: 150, descansoEjercicio: 180, tipo: "compuesto", pausaActiva: "Movilidad de Psoas en Caballero: 3 x 30 s por pierna con retroversión pélvica." },
+                    { nombre: "Sentadilla Búlgara", series: 3, reps: 10, peso: 10, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Extensión de Cuádriceps", series: 3, reps: 12, peso: 4, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Elevaciones de Talones (Barra)", series: 4, reps: 15, peso: 30, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "hombros_1": {
+                nombre: "Hombros 1: Sándwich Lateral y Posterior",
+                turno: "manana", categoria: "fuerza", infoExtra: "Martes Mañana (Casa) • Inmediatamente tras Legs A",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Remo Vertical en Polea Baja", series: 3, reps: 15, peso: 2, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Face Pull (Cuerda)", series: 3, reps: 15, peso: 2, unidad: "discos", descanso: 75, descansoEjercicio: 120, tipo: "aislado" },
+                    { nombre: "Elevaciones Laterales de pie (Mancuernas)", series: 3, reps: 15, peso: 7, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "movilidad_1": {
+                nombre: "Movilidad 1: Tobillo y Psoas (Martes)",
+                turno: "manana", categoria: "movilidad", infoExtra: "Martes Mañana (Casa) • Pre-Sentadilla e Intrasesión",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Dorsiflexión de tobillo contra la pared (Calentamiento)", series: 2, reps: 15, peso: 15, unidad: "reps", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" },
+                    { nombre: "Movilidad de Psoas en Caballero (Descanso Sentadillas)", series: 3, reps: 30, peso: 30, unidad: "seg", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" }
+                ]
+            },
+            "campo_1": {
+                nombre: "Campo 1: Pliometría y Velocidad (30x20m)",
+                turno: "tarde", categoria: "campo", infoExtra: "Martes Tarde (Quinta 30x20m) • Zapatillas (Saltos) y Botines (Sprints)",
+                ejercicios: [
+                    { nombre: "Calentamiento Neural + Progresiones en Carril de 20m", series: 1, reps: 8, peso: 8, unidad: "min", descanso: 0, descansoEjercicio: 90, tipo: "campo" },
+                    { nombre: "Pliometría Reactiva: Pogo Jumps (Zapatillas)", series: 3, reps: 10, peso: 0, unidad: "reps", descanso: 75, descansoEjercicio: 120, tipo: "campo" },
+                    { nombre: "Pliometría Horizontal: Broad Jump a 2 pies (Zapatillas)", series: 4, reps: 3, peso: 0, unidad: "reps", descanso: 120, descansoEjercicio: 180, tipo: "campo" },
+                    { nombre: "Aceleración Pura 10m (20m libres de frenado antes de pared - Botines)", series: 4, reps: 1, peso: 10, unidad: "m", descanso: 90, descansoEjercicio: 150, tipo: "campo" },
+                    { nombre: "Aceleración en Transición: 4m trote + 16m Sprint (8m frenado - Botines)", series: 4, reps: 1, peso: 20, unidad: "m", descanso: 120, descansoEjercicio: 180, tipo: "campo" },
+                    { nombre: "Sprint Lanzado en Diagonal (36m: 10m prog + 16m V-Máx + 10m freno)", series: 4, reps: 1, peso: 26, unidad: "m", descanso: 180, descansoEjercicio: 120, tipo: "campo" }
+                ]
+            },
+
+            // --- MIÉRCOLES ---
+            "push_1": {
+                nombre: "Push 1: Pecho, Hombro Anterior y Tríceps",
+                turno: "manana", categoria: "fuerza", infoExtra: "Miércoles Mañana (Casa) • 6 ejercicios",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Press Plano (Barra)", series: 4, reps: 10, peso: 36, unidad: "kg", descanso: 150, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Press Inclinado (Mancuernas)", series: 3, reps: 10, peso: 17, unidad: "kg", descanso: 120, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Press Militar Sentado", series: 3, reps: 10, peso: 15, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Aperturas en máquina", series: 3, reps: 15, peso: 5, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Extensión sobre cabeza unilateral (Manc)", series: 3, reps: 12, peso: 8, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Extensión de tríceps (Barra)", series: 3, reps: 15, peso: 2, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" }
+                ]
+            },
+            "core_b": {
+                nombre: "Core B: Estabilidad Anti-Rotación",
+                turno: "manana", categoria: "core", infoExtra: "Miércoles Mañana (Casa) • Al finalizar Push 1",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Plancha Lateral", series: 3, reps: 12, peso: 12, unidad: "reps", descanso: 60, descansoEjercicio: 90, tipo: "movilidad" },
+                    { nombre: "Bicho Muerto (Dead Bug)", series: 3, reps: 10, peso: 10, unidad: "reps", descanso: 60, descansoEjercicio: 60, tipo: "movilidad" }
+                ]
+            },
+            "caminata_larga": {
+                nombre: "Caminata LISS Larga (Oxidación Adiposa)",
+                turno: "tarde", categoria: "caminata", infoExtra: "Miércoles Tarde (Quinta) • Zona 1-2 (5.2 a 5.7 km/h)",
+                ejercicios: [
+                    { nombre: "Caminata Continua a Paso Firme", series: 1, reps: 65, peso: 65, unidad: "min", descanso: 0, descansoEjercicio: 60, tipo: "campo" }
+                ]
+            },
+            "movilidad_profunda": {
+                nombre: "Movilidad Profunda: Cadera, Psoas y Tobillo",
+                turno: "tarde", categoria: "movilidad", infoExtra: "Miércoles Tarde (Casa/Quinta) • Desbloqueo articular",
+                ejercicios: [
+                    { nombre: "Estiramiento Psoas en Caballero (Retroversión Pélvica)", series: 2, reps: 45, peso: 45, unidad: "seg", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" },
+                    { nombre: "Rotaciones Internas/Externas de Cadera 90/90", series: 2, reps: 10, peso: 10, unidad: "reps", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" },
+                    { nombre: "Movilidad de Aductores en Cuadrupedia (Adductor Rockbacks)", series: 2, reps: 12, peso: 12, unidad: "reps", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" },
+                    { nombre: "Dorsiflexión Dinámica de Tobillo contra Pared", series: 2, reps: 15, peso: 15, unidad: "reps", descanso: 30, descansoEjercicio: 0, tipo: "movilidad" }
+                ]
+            },
+
+            // --- JUEVES ---
+            "legs_2": {
+                nombre: "Legs 2: Cadena Posterior e Isquios",
+                turno: "manana", categoria: "fuerza", infoExtra: "Jueves Mañana (Casa) • Cero fallo muscular (RIR 2)",
+                ejercicios: [
+                    //[cite: 1]
+                    { nombre: "Peso muerto rumano (barra)", series: 4, reps: 10, peso: 36, unidad: "kg", descanso: 150, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Hip Thrust", series: 3, reps: 12, peso: 30, unidad: "kg", descanso: 120, descansoEjercicio: 180, tipo: "compuesto", pausaActiva: "Realizar Movilidad de Aductores en Cuadrupedia (Adductor Rockbacks): 3 x 10 por pierna." },
+                    { nombre: "Curl Femoral de pie", series: 3, reps: 12, peso: 2, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Elevaciones de talones sentado", series: 4, reps: 15, peso: 36, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "hombros_2": {
+                nombre: "Hombros 2: Sándwich Lateral 3D y Posterior",
+                turno: "manana", categoria: "fuerza", infoExtra: "Jueves Mañana (Casa) • Inmediatamente tras Legs 2",
+                ejercicios: [
+                    //[cite: 2]
+                    { nombre: "Elevaciones laterales sentado (mancuernas)", series: 3, reps: 15, peso: 7, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" },
+                    { nombre: "Pájaros con mancuernas", series: 4, reps: 15, peso: 7, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" },
+                    { nombre: "Elevaciones laterales tumbado de lado", series: 3, reps: 12, peso: 6, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "movilidad_2": {
+                nombre: "Movilidad 2: Aductores e Ingle (Jueves)",
+                turno: "manana", categoria: "movilidad", infoExtra: "Jueves Mañana (Casa) • En descansos de Hip Thrust",
+                ejercicios: [
+                    //[cite: 2]
+                    { nombre: "Movilidad de Aductores en Cuadrupedia (Adductor Rockbacks)", series: 3, reps: 10, peso: 10, unidad: "reps", descanso: 30, descansoEjercicio: 60, tipo: "movilidad" }
+                ]
+            },
+            "campo_2": {
+                nombre: "Campo 2: Agilidad COD, Conos y Pelota (30x20m)",
+                turno: "tarde", categoria: "campo", infoExtra: "Jueves Tarde (Quinta 30x20m) • 100% Botines de Fútbol",
+                ejercicios: [
+                    { nombre: "Activación Dinámica de Cadera, Aductores y Conducción Libre", series: 1, reps: 8, peso: 8, unidad: "min", descanso: 0, descansoEjercicio: 90, tipo: "campo" },
+                    { nombre: "Desaceleración y Re-Aceleración 5-10-5 m (Frenado bajo con Botines)", series: 4, reps: 1, peso: 25, unidad: "m", descanso: 105, descansoEjercicio: 150, tipo: "campo" },
+                    { nombre: "Circuito de Corte en Zig-Zag (5 Conos a 4x3m en 20m totales)", series: 6, reps: 1, peso: 20, unidad: "m", descanso: 90, descansoEjercicio: 180, tipo: "campo" },
+                    { nombre: "Slalom 4 Conos (6m) + Autopase 10m + Pase Fuerte a Pared y Control", series: 6, reps: 1, peso: 22, unidad: "m", descanso: 90, descansoEjercicio: 120, tipo: "campo" },
+                    { nombre: "Agilidad en 'L' (5x5m) + Giro 180° con Pelota y Pared", series: 4, reps: 1, peso: 15, unidad: "m", descanso: 90, descansoEjercicio: 120, tipo: "campo" }
+                ]
+            },
+
+            // --- VIERNES ---
+            "pull_2": {
+                nombre: "Pull 2: Espalda (Amplitud sin Carga Lumbar) y Bíceps",
+                turno: "manana", categoria: "fuerza", infoExtra: "Viernes Mañana (Casa) • Protege cintura pre-partido",
+                ejercicios: [
+                    //[cite: 2]
+                    { nombre: "Jalón al Pecho (Abierto)", series: 4, reps: 10, peso: 6, unidad: "discos", descanso: 120, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Remo con Mancuerna", series: 3, reps: 12, peso: 15, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Pull-Over con Cuerda", series: 3, reps: 15, peso: 2, unidad: "discos", descanso: 75, descansoEjercicio: 120, tipo: "aislado" },
+                    { nombre: "Curl con Barra de Pie", series: 3, reps: 10, peso: 20, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Curl Inclinado (45°)", series: 3, reps: 12, peso: 7, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Curl Invertido (Barra)", series: 3, reps: 15, peso: 15, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" }
+                ]
+            },
+            "core_c": {
+                nombre: "Core C: Recto Abdominal y Vacuum (Cintura)",
+                turno: "manana", categoria: "core", infoExtra: "Viernes Mañana (Casa) • Al finalizar Pull 2",
+                ejercicios: [
+                    //[cite: 2]
+                    { nombre: "Crunch abdominal con peso", series: 3, reps: 15, peso: 5, unidad: "kg", descanso: 60, descansoEjercicio: 90, tipo: "movilidad" },
+                    { nombre: "Elevaciones de Piernas Colgado", series: 3, reps: 12, peso: 0, unidad: "kg", descanso: 60, descansoEjercicio: 90, tipo: "movilidad" },
+                    { nombre: "Vacío Abdominal (Stomach Vacuum)", series: 4, reps: 20, peso: 20, unidad: "seg", descanso: 45, descansoEjercicio: 60, tipo: "movilidad" }
+                ]
+            },
+            "caminata_moderada": {
+                nombre: "Caminata LISS Moderada Pre-Partido",
+                turno: "tarde", categoria: "caminata", infoExtra: "Viernes Tarde (Quinta) • Sin fatiga muscular",
+                ejercicios: [
+                    { nombre: "Caminata Fluida en Zona 1 (Activación Circulatoria)", series: 1, reps: 50, peso: 50, unidad: "min", descanso: 0, descansoEjercicio: 0, tipo: "campo" }
+                ]
+            },
+
+            // --- SÁBADO ---
+            "partido_futbol": {
+                nombre: "Partido Oficial de Torneo (Fútbol)",
+                turno: "manana", categoria: "campo", infoExtra: "Sábado Mañana (8:00 a 12:00 hs) • Día de Competencia",
+                ejercicios: [
+                    { nombre: "Activación Pre-Partido (Movilidad de Cadera y Progresiones)", series: 1, reps: 12, peso: 12, unidad: "min", descanso: 0, descansoEjercicio: 180, tipo: "campo" },
+                    { nombre: "Partido de Torneo Universitario", series: 2, reps: 45, peso: 45, unidad: "min", descanso: 600, descansoEjercicio: 0, tipo: "campo" }
+                ]
+            },
+
+            // --- DOMINGO ---
+            "push_2": {
+                nombre: "Push 2: Prioridad Hombro Lateral, Pecho y Tríceps",
+                turno: "tarde", categoria: "fuerza", infoExtra: "Domingo Tarde (Casa) • Cero carga en piernas",
+                ejercicios: [
+                    //[cite: 2]
+                    { nombre: "Elevaciones laterales sentado (mancuernas)", series: 4, reps: 15, peso: 7, unidad: "kg", descanso: 75, descansoEjercicio: 120, tipo: "aislado" },
+                    { nombre: "Press inclinado (Barra)", series: 4, reps: 10, peso: 36, unidad: "kg", descanso: 150, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Press Militar Sentado", series: 3, reps: 10, peso: 15, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "compuesto" },
+                    { nombre: "Press Plano (Mancuernas)", series: 3, reps: 10, peso: 17, unidad: "kg", descanso: 120, descansoEjercicio: 180, tipo: "compuesto" },
+                    { nombre: "Aperturas en máquina 90°", series: 3, reps: 15, peso: 4, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Press Francés (Barra)", series: 4, reps: 12, peso: 15, unidad: "kg", descanso: 90, descansoEjercicio: 150, tipo: "aislado" },
+                    { nombre: "Extensión de tríceps (cuerda)", series: 3, reps: 12, peso: 2, unidad: "discos", descanso: 90, descansoEjercicio: 150, tipo: "aislado" }
+                ]
+            },
+            "caminata_regenerativa": {
+                nombre: "Caminata LISS Regenerativa Post-Partido",
+                turno: "tarde", categoria: "caminata", infoExtra: "Domingo Tarde (Quinta) • Lavado de metabolitos",
+                ejercicios: [
+                    { nombre: "Caminata Regenerativa Continua (5.2 km/h)", series: 1, reps: 60, peso: 60, unidad: "min", descanso: 0, descansoEjercicio: 0, tipo: "campo" }
+                ]
+            },
+
+            // --- COMPLEMENTO POST-CAMPO (LUNES, MARTES, JUEVES) ---
+            "caminata_post": {
+                nombre: "Caminata LISS Post-Campo (20 min)",
+                turno: "tarde", categoria: "caminata", infoExtra: "Quinta • Oxidación de ácidos grasos post-esfuerzo",
+                ejercicios: [
+                    { nombre: "Caminata Continua en Zona 1-2 alrededor del predio", series: 1, reps: 20, peso: 20, unidad: "min", descanso: 0, descansoEjercicio: 0, tipo: "campo" }
+                ]
+            }
+        };
+
+        // DISTRIBUCIÓN SEMANAL COMPLETA POR DÍA (0: Dom, 1: Lun, 2: Mar, 3: Mié, 4: Jue, 5: Vie, 6: Sáb)
+        const planSemanal = {
+            1: ["pull_a", "core_a", "campo_3", "caminata_post"],
+            2: ["movilidad_1", "legs_a", "hombros_1", "campo_1", "caminata_post"],
+            3: ["push_1", "core_b", "caminata_larga", "movilidad_profunda"],
+            4: ["legs_2", "movilidad_2", "hombros_2", "campo_2", "caminata_post"],
+            5: ["pull_2", "core_c", "caminata_moderada"],
+            6: ["partido_futbol"],
+            0: ["push_2", "caminata_regenerativa"]
+        };
+
+        const codigosMDDia = {
+            1: "MD-5 / MD+2 • Densidad + HIIT",
+            2: "MD-4 • Sobrecarga Fuerza y Sprint",
+            3: "MD-3 • Empuje + Descarga Impacto",
+            4: "MD-2 • Cadena Posterior y Agilidad",
+            5: "MD-1 • Amplitud + Puesta a Punto",
+            6: "MD • Día de Competencia (8-12 hs)",
+            0: "MD+1 • Empuje Estético + LISS"
+        };
+
+        const nombresDias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+        let misRutinas = {};
+        let idRutinaEnVistaPrevia = null;
+        let estadoActual = { idRutina: null, ejercicioIndex: 0, serieActual: 1, datosRutina: null, volumenAcumulado: 0 };
+        let temporizador; let tiempoRestante = 0; let wakeLock = null; let graficoVolumen = null; let unsubscribeRutinas = null;
+        let temporizadorTotal; let segundosTotales = 0;
+        let marcaTiempoFinDescanso = 0;
+        let pesoCorporalUsuario = 69;
+
+        // =========================================================================
+        // MOTOR DE GUÍA TÉCNICA Y "PERSONITA ANIMADA" SVG POR EJERCICIO
+        // =========================================================================
+        function obtenerGuiaYAnimacionEjercicio(nombreEj) {
+            const n = nombreEj.toLowerCase();
+
+            // 1. PRESS DE BANCA PLANO / INCLINADO / APERTURAS
+            if (n.includes("press plano") || n.includes("press inclinado") || n.includes("aperturas")) {
+                return {
+                    tempo: "Tempo: 2-0-1-0",
+                    postura: "Retracción y depresión escapular firme contra el banco, glúteos apoyados y pies empujando el piso.",
+                    agarre: "Agarre cerrado pronado un poco más ancho que los hombros; muñecas rectas alineadas con los codos (45°-60° del torso).",
+                    clave: "Baja controlado en 2s estirando el pectoral y empuja explosivo sin despegar los hombros del respaldo.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <line x1="25" y1="115" x2="125" y2="115" class="figura-banco"/>
+                        <line x1="40" y1="115" x2="40" y2="145" class="figura-banco"/>
+                        <line x1="110" y1="115" x2="110" y2="145" class="figura-banco"/>
+                        <circle cx="42" cy="102" r="9" class="figura-cabeza"/>
+                        <path d="M52 105 L105 105 L122 125 L128 143" class="figura-cuerpo"/>
+                        <g class="mov-empuje">
+                            <line x1="68" y1="105" x2="68" y2="68" class="figura-cuerpo"/>
+                            <line x1="45" y1="68" x2="95" y2="68" class="figura-equipo"/>
+                            <circle cx="45" cy="68" r="8" fill="#FF9F0A"/>
+                            <circle cx="95" cy="68" r="8" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 2. PRESS MILITAR SENTADO
+            if (n.includes("press militar")) {
+                return {
+                    tempo: "Tempo: 2-0-1-0",
+                    postura: "Sentado con espalda alta apoyada a 75°-80°, abdomen compacto para no arquear la cintura.",
+                    agarre: "Antebrazos totalmente verticales debajo de las muñecas; codos ligeramente adelantados (plano escapular 30°).",
+                    clave: "Desciende hasta la altura del mentón/clavícula y empuja verticalmente sin chocar las mancuernas arriba.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <path d="M55 65 L55 125 L95 125" class="figura-banco"/>
+                        <circle cx="75" cy="52" r="9" class="figura-cabeza"/>
+                        <path d="M75 63 L75 115 L105 115 L105 145" class="figura-cuerpo"/>
+                        <g class="mov-empuje">
+                            <path d="M52 75 L75 82 L98 75" class="figura-cuerpo"/>
+                            <line x1="42" y1="50" x2="108" y2="50" class="figura-equipo"/>
+                            <circle cx="45" cy="50" r="6" fill="#FF9F0A"/>
+                            <circle cx="105" cy="50" r="6" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 3. ELEVACIONES LATERALES / PÁJAROS / REMO VERTICAL
+            if (n.includes("elevaciones laterales") || n.includes("pájaros") || n.includes("remo vertical")) {
+                return {
+                    tempo: "Tempo: 2-1-1-0",
+                    postura: "Torso estable con ligera inclinación hacia adelante (10°), hombros bajos lejos de las orejas (sin encoger trapecios).",
+                    agarre: "Codos destrabados con ligera flexión constante; guía el movimiento con los codos hacia las paredes laterales, no con las manos.",
+                    clave: "Sube hasta que el brazo quede paralelo al piso (90°), sostén medio segundo y baja en 2-3 segundos resistiendo la gravedad.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <circle cx="80" cy="40" r="9" class="figura-cabeza"/>
+                        <line x1="80" y1="52" x2="80" y2="102" class="figura-cuerpo"/>
+                        <path d="M80 102 L65 145 M80 102 L95 145" class="figura-cuerpo"/>
+                        <g class="mov-vuelo-izq">
+                            <line x1="76" y1="62" x2="55" y2="95" class="figura-cuerpo"/>
+                            <circle cx="53" cy="98" r="5" fill="#FF9F0A"/>
+                        </g>
+                        <g class="mov-vuelo-der">
+                            <line x1="84" y1="62" x2="105" y2="95" class="figura-cuerpo"/>
+                            <circle cx="107" cy="98" r="5" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 4. JALÓN AL PECHO / PULL-OVER
+            if (n.includes("jalón") || n.includes("pull-over")) {
+                return {
+                    tempo: "Tempo: 2-1-1-0",
+                    postura: "Pecho alto proyectado hacia la polea, leve inclinación dorsal (15°) y muslos fijos.",
+                    agarre: n.includes("supino") ? "Agarre supino (palmas hacia vos) al ancho de hombros." : "Agarre abierto pronado; inicia el movimiento deprimiendo las escápulas.",
+                    clave: "Tira llevando los codos hacia abajo y hacia las costillas hasta tocar la clavícula, controlando el estiramiento arriba.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <line x1="80" y1="10" x2="80" y2="55" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+                        <circle cx="80" cy="68" r="9" class="figura-cabeza"/>
+                        <path d="M80 79 L80 118 L108 118 L108 148" class="figura-cuerpo"/>
+                        <g class="mov-traccion">
+                            <line x1="48" y1="45" x2="112" y2="45" class="figura-equipo"/>
+                            <path d="M55 45 L68 82 L80 82 L92 82 L105 45" class="figura-cuerpo"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 5. REMOS (CON BARRA / POLEA BAJA / MANCUERNA / FACE PULL)
+            if (n.includes("remo") || n.includes("face pull")) {
+                return {
+                    tempo: "Tempo: 2-1-1-0",
+                    postura: "Columna neutra compacta sin redondear la zona lumbar, rodillas semiflexionadas y core firme.",
+                    agarre: "Tracciona llevando el codo hacia atrás (hacia la cadera para dorsal ancho, o abierto en Face Pull para deltoides posterior).",
+                    clave: "Evita balancear el torso con inercia lumbar; pausa 1 segundo apretando escápulas al final del recorrido.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <circle cx="52" cy="52" r="9" class="figura-cabeza"/>
+                        <path d="M58 60 L95 90 L82 118 L82 146" class="figura-cuerpo"/>
+                        <g class="mov-remo">
+                            <path d="M68 68 L68 105" class="figura-cuerpo"/>
+                            <circle cx="68" cy="110" r="8" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 6. BÍCEPS Y ANTEBRAZOS (CURL / MUÑECA)
+            if (n.includes("curl") || n.includes("muñeca")) {
+                return {
+                    tempo: "Tempo: 2-1-1-0",
+                    postura: "Hombros fijos hacia atrás y codos clavados en su ángulo (detrás del torso en inclinado, adelante en predicador o al costado de pie).",
+                    agarre: "Muñecas firmes sin quebrarlas; aprieta fuerte la barra o mancuerna para reclutar toda la cadena flexora.",
+                    clave: "Cero balanceo de cadera: sube contrayendo el bíceps y desciende en 2-3 segundos completos sin rebotar abajo.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <circle cx="80" cy="40" r="9" class="figura-cabeza"/>
+                        <path d="M80 52 L80 105 L70 148 M80 105 L92 148" class="figura-cuerpo"/>
+                        <line x1="80" y1="56" x2="82" y2="78" class="figura-cuerpo"/>
+                        <g class="mov-curl">
+                            <line x1="82" y1="78" x2="108" y2="95" class="figura-cuerpo"/>
+                            <circle cx="111" cy="97" r="6" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 7. TRÍCEPS (PRESS FRANCÉS / EXTENSIÓN)
+            if (n.includes("tríceps") || n.includes("frances") || n.includes("francés") || n.includes("extensión sobre cabeza")) {
+                return {
+                    tempo: "Tempo: 2-0-1-1",
+                    postura: "Codos fijos apuntando al frente o al techo, actuando únicamente como bisagra sin mover el hombro.",
+                    agarre: "Agarre firme en cuerda, barra o mancuerna controlando la apertura final para máxima contracción del tríceps.",
+                    clave: "Flexiona el codo al máximo para estirar la cabeza larga del tríceps y bloquea 1 segundo al extender por completo.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <circle cx="75" cy="42" r="9" class="figura-cabeza"/>
+                        <path d="M75 54 L75 106 L65 148 M75 106 L88 148" class="figura-cuerpo"/>
+                        <line x1="75" y1="58" x2="82" y2="78" class="figura-cuerpo"/>
+                        <g class="mov-curl">
+                            <line x1="82" y1="78" x2="105" y2="55" class="figura-cuerpo"/>
+                            <circle cx="107" cy="53" r="5" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 8. SENTADILLA / BÚLGARA / EXTENSIÓN CUÁDRICEPS / GEMELOS
+            if (n.includes("sentadilla") || n.includes("cuádriceps") || n.includes("talones")) {
+                return {
+                    tempo: "Tempo: 2-0-X-0 (Subida Explosiva)",
+                    postura: "Pecho orgulloso, presión intraabdominal 360° (bracing) y rodillas alineadas con la punta de los pies.",
+                    agarre: "Calzado plano o descalzo en casa (nunca amortiguación blanda). Barra apoyada firme sobre los trapecios.",
+                    clave: "Desciende controlado en 2s y sube aplicando la máxima velocidad intencional posible manteniendo RIR 2.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <g class="mov-sentadilla">
+                            <circle cx="80" cy="36" r="9" class="figura-cabeza"/>
+                            <line x1="48" y1="48" x2="112" y2="48" class="figura-equipo"/>
+                            <circle cx="48" cy="48" r="7" fill="#FF9F0A"/>
+                            <circle cx="112" cy="48" r="7" fill="#FF9F0A"/>
+                            <path d="M80 48 L74 92 L96 112 L84 145" class="figura-cuerpo"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 9. PESO MUERTO RUMANO / HIP THRUST / CURL FEMORAL
+            if (n.includes("peso muerto") || n.includes("hip thrust") || n.includes("femoral")) {
+                return {
+                    tempo: "Tempo: 3-1-1-0",
+                    postura: "Bisagra pura de cadera: columna neutra de acero, mentón ligeramente recogido y costillas bajas.",
+                    agarre: "Barra pegada a los muslos/tibias en el RDL; empuje desde los talones en el Hip Thrust con tibias a 90° arriba.",
+                    clave: "Baja en 3 segundos sintiendo tensión en isquiotibiales y frena apenas tu cadera deje de ir hacia atrás (RIR 2).",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <g class="mov-sentadilla">
+                            <circle cx="52" cy="48" r="9" class="figura-cabeza"/>
+                            <path d="M58 56 L102 82 L94 115 L94 146" class="figura-cuerpo"/>
+                            <line x1="74" y1="68" x2="74" y2="112" class="figura-cuerpo"/>
+                            <circle cx="74" cy="116" r="9" fill="#FF9F0A"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 10. PLIOMETRÍA / SALTOS
+            if (n.includes("pliometría") || n.includes("pogo") || n.includes("jump") || n.includes("salto")) {
+                return {
+                    tempo: "Contacto Mínimo Reactivo (<0.2s)",
+                    postura: "Tobillo pre-activado en dorsiflexión antes de tocar el suelo, rodillas y cadera alineadas para absorber y disparar.",
+                    agarre: "Usar Zapatillas de Running en este bloque para proteger el tendón rotuliano y el tendón de Aquiles.",
+                    clave: "Imagina que el piso quema en los Pogo Jumps; en el Broad Jump resetea 2 segundos después de cada aterrizaje estable.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <line x1="20" y1="142" x2="140" y2="142" class="figura-banco"/>
+                        <g class="mov-salto">
+                            <circle cx="68" cy="46" r="9" class="figura-cabeza"/>
+                            <path d="M68 57 L62 96 L48 122 L62 138 M62 96 L82 115 L75 138" class="figura-cuerpo"/>
+                            <path d="M65 65 L88 48" class="figura-cuerpo"/>
+                        </g>
+                    </svg>`
+                };
+            }
+
+            // 11. CAMPO: SPRINT / ACELERACIÓN / HIIT / AGILIDAD / CAMINATA
+            if (n.includes("sprint") || n.includes("aceleración") || n.includes("hiit") || n.includes("zig-zag") || n.includes("slalom") || n.includes("agilidad") || n.includes("caminata") || n.includes("calentamiento") || n.includes("partido")) {
+                const usaBotines = n.includes("botines") || n.includes("zig-zag") || n.includes("slalom") || n.includes("agilidad") || n.includes("sprint") || n.includes("aceleración");
+                return {
+                    tempo: n.includes("caminata") ? "Ritmo LISS: 5.2 - 5.7 km/h" : "Intensidad: 95-100% Velocidad",
+                    postura: n.includes("caminata") ? "Paso largo, rítmico y fluido en Zona 1-2 (poder hablar sin agitarse)." : "Torso a 45° en los primeros 10m de aceleración; baja el centro de gravedad con pasos cortos antes de frenar cerca de la pared.",
+                    agarre: usaBotines ? "Calzado: Botines de Fútbol para máxima tracción en el césped de 30x20m." : "Calzado: Zapatillas de Running para proteger articulaciones en pasadas lineales.",
+                    clave: "En tu terreno de 30x20m usa siempre los últimos 6 a 8 metros antes de la pared como zona de desaceleración progresiva.",
+                    svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                        <polygon points="22,142 30,122 38,142" class="figura-cono"/>
+                        <polygon points="125,142 133,122 141,142" class="figura-cono"/>
+                        <circle cx="92" cy="42" r="9" class="figura-cabeza"/>
+                        <line x1="88" y1="52" x2="76" y2="92" class="figura-cuerpo"/>
+                        <path d="M62 68 L84 62 L104 74" class="figura-cuerpo"/>
+                        <g class="mov-pierna-a"><path d="M76 92 L102 112 L95 138" class="figura-cuerpo"/></g>
+                        <g class="mov-pierna-b"><path d="M76 92 L54 118 L42 138" class="figura-cuerpo"/></g>
+                    </svg>`
+                };
+            }
+
+            // 12. CORE Y MOVILIDAD
+            return {
+                tempo: "Control Isométrico y Respiración",
+                postura: "Retroversión pélvica activa (apretar glúteos y meter la cola hacia adentro) para proteger la columna lumbar.",
+                agarre: "Exhala todo el aire en el punto de máxima contracción abdominal (especialmente en Vacío Abdominal y Plancha RKC).",
+                clave: "Calidad sobre velocidad: siente la tensión profunda en el transverso abdominal o el estiramiento en la cápsula de la cadera.",
+                svg: `<svg class="svg-entrenador" viewBox="0 0 160 160">
+                    <line x1="20" y1="128" x2="140" y2="128" class="figura-banco"/>
+                    <circle cx="80" cy="95" r="10" class="mov-core"/>
+                    <circle cx="38" cy="86" r="8" class="figura-cabeza"/>
+                    <path d="M48 92 L125 112 L132 126 M52 94 L48 125 L62 125" class="figura-cuerpo"/>
+                </svg>`
+            };
+        }
+
+        window.toggleGuiaTecnica = function() {
+            vibrar('click');
+            const panel = document.getElementById('panelGuiaEjercicio');
+            const btn = document.getElementById('btnToggleGuia');
+            panel.classList.toggle('oculto');
+            btn.classList.toggle('activo');
+        };
+
+        // =========================================================================
+        // CRONÓMETRO DE INTERVALOS CONSECUTIVOS / HIIT EN PANTALLA DE INICIO
+        // =========================================================================
+        let hiitConfig = {
+            ciclos: 5,
+            prepSeg: 5,
+            fases: [
+                { nombre: "Corriendo / Trabajo", segundos: 45, tipo: "trabajo" },
+                { nombre: "Caminando / Pausa", segundos: 15, tipo: "descanso" }
+            ]
+        };
+        let hiitEstado = {
+            corriendo: false,
+            enPreparacion: true,
+            cicloActual: 1,
+            faseIndex: 0,
+            segRestantesFase: 5,
+            intervalId: null
+        };
+
+        function renderizarFasesConfigHIIT() {
+            const cont = document.getElementById('contenedorFasesHIIT');
+            if (!cont) return;
+            cont.innerHTML = '';
+            hiitConfig.fases.forEach((f, idx) => {
+                const btnDel = hiitConfig.fases.length > 1
+                    ? `<button class="btn-principal btn-peligro" style="width:34px; padding:8px; font-size:12px;" onclick="eliminarFaseHIIT(${idx})">✖</button>`
+                    : '';
+                cont.innerHTML += `
+                    <div class="hiit-builder-row">
+                        <input type="text" value="${f.nombre}" style="flex:1.6;" onchange="actualizarFaseHIIT(${idx}, 'nombre', this.value)">
+                        <input type="number" value="${f.segundos}" min="1" style="flex:0.8; text-align:center;" onchange="actualizarFaseHIIT(${idx}, 'segundos', this.value)">
+                        <span style="font-size:11px; color:var(--texto-secundario);">seg</span>
+                        <select style="flex:1;" onchange="actualizarFaseHIIT(${idx}, 'tipo', this.value)">
+                            <option value="trabajo" ${f.tipo === 'trabajo' ? 'selected' : ''}>🔥 Trabajo</option>
+                            <option value="descanso" ${f.tipo === 'descanso' ? 'selected' : ''}>❄️ Pausa</option>
+                        </select>
+                        ${btnDel}
+                    </div>
+                `;
+            });
+        }
+
+        window.toggleConfigHIIT = function() {
+            vibrar('click');
+            document.getElementById('panelConfigHIIT').classList.toggle('oculto');
+            renderizarFasesConfigHIIT();
+        };
+
+        window.actualizarFaseHIIT = function(idx, campo, valor) {
+            if (campo === 'segundos') hiitConfig.fases[idx].segundos = Math.max(1, parseInt(valor) || 15);
+            else hiitConfig.fases[idx][campo] = valor;
+            reiniciarCronometroHIIT();
+        };
+
+        window.agregarFaseHIIT = function() {
+            hiitConfig.fases.push({ nombre: "Nueva Fase", segundos: 15, tipo: "descanso" });
+            renderizarFasesConfigHIIT();
+            reiniciarCronometroHIIT();
+        };
+
+        window.eliminarFaseHIIT = function(idx) {
+            if (hiitConfig.fases.length <= 1) return;
+            hiitConfig.fases.splice(idx, 1);
+            renderizarFasesConfigHIIT();
+            reiniciarCronometroHIIT();
+        };
+
+        window.cargarPresetHIIT = function(segTrabajo, segPausa, cantCiclos, etiqueta) {
+            vibrar('click');
+            document.getElementById('hiitInputCiclos').value = cantCiclos;
+            hiitConfig.ciclos = cantCiclos;
+            hiitConfig.fases = [
+                { nombre: `Corriendo / Pasada (${segTrabajo}s)`, segundos: segTrabajo, tipo: "trabajo" },
+                { nombre: `Pausa / Caminando (${segPausa}s)`, segundos: segPausa, tipo: "descanso" }
+            ];
+            renderizarFasesConfigHIIT();
+            reiniciarCronometroHIIT();
+        };
+
+        function calcularSegundosTotalesRestantesHIIT() {
+            const segPorCiclo = hiitConfig.fases.reduce((acc, f) => acc + f.segundos, 0);
+            if (hiitEstado.enPreparacion) {
+                return hiitEstado.segRestantesFase + (hiitConfig.ciclos * segPorCiclo);
+            }
+            let restEnCicloActual = hiitEstado.segRestantesFase;
+            for (let i = hiitEstado.faseIndex + 1; i < hiitConfig.fases.length; i++) {
+                restEnCicloActual += hiitConfig.fases[i].segundos;
+            }
+            const ciclosFuturos = Math.max(0, hiitConfig.ciclos - hiitEstado.cicloActual);
+            return restEnCicloActual + (ciclosFuturos * segPorCiclo);
+        }
+
+        function actualizarDisplayHIIT() {
+            const caja = document.getElementById('hiitCajaVisual');
+            const lblCiclo = document.getElementById('hiitTextoCiclo');
+            const lblTotal = document.getElementById('hiitTextoTotalRestante');
+            const lblFase = document.getElementById('hiitNombreFaseActual');
+            const lblReloj = document.getElementById('hiitRelojDisplay');
+            const lblSig = document.getElementById('hiitSiguienteFaseInfo');
+
+            lblCiclo.innerText = `CICLO ${hiitEstado.cicloActual} / ${hiitConfig.ciclos}`;
+
+            const totalSeg = calcularSegundosTotalesRestantesHIIT();
+            const tm = Math.floor(totalSeg / 60).toString().padStart(2, '0');
+            const ts = (totalSeg % 60).toString().padStart(2, '0');
+            lblTotal.innerText = `Restante: ${tm}:${ts}`;
+
+            const m = Math.floor(hiitEstado.segRestantesFase / 60).toString().padStart(2, '0');
+            const s = (hiitEstado.segRestantesFase % 60).toString().padStart(2, '0');
+            lblReloj.innerText = `${m}:${s}`;
+
+            caja.classList.remove('fase-trabajo', 'fase-descanso');
+
+            if (hiitEstado.enPreparacion) {
+                lblFase.innerText = "⏳ PREPARATE PARA SALIR";
+                lblFase.style.color = "var(--alerta)";
+                const prim = hiitConfig.fases[0];
+                lblSig.innerText = `Inicia: ${prim.nombre} (${prim.segundos}s)`;
+            } else {
+                const faseAct = hiitConfig.fases[hiitEstado.faseIndex];
+                lblFase.innerText = faseAct.nombre;
+                if (faseAct.tipo === "trabajo") {
+                    caja.classList.add('fase-trabajo');
+                    lblFase.style.color = "var(--exito)";
+                } else {
+                    caja.classList.add('fase-descanso');
+                    lblFase.style.color = "var(--cian)";
+                }
+
+                // Determinar siguiente paso
+                if (hiitEstado.faseIndex + 1 < hiitConfig.fases.length) {
+                    const sigF = hiitConfig.fases[hiitEstado.faseIndex + 1];
+                    lblSig.innerText = `Luego: ${sigF.nombre} (${sigF.segundos}s)`;
+                } else if (hiitEstado.cicloActual < hiitConfig.ciclos) {
+                    const primF = hiitConfig.fases[0];
+                    lblSig.innerText = `Próximo Ciclo (${hiitEstado.cicloActual + 1}/${hiitConfig.ciclos}): ${primF.nombre}`;
+                } else {
+                    lblSig.innerText = "¡Última cuenta regresiva del bloque!";
+                }
+            }
+        }
+
+        window.reiniciarCronometroHIIT = function() {
+            clearInterval(hiitEstado.intervalId);
+            hiitConfig.ciclos = Math.max(1, parseInt(document.getElementById('hiitInputCiclos').value) || 5);
+            hiitConfig.prepSeg = Math.max(0, parseInt(document.getElementById('hiitInputPrep').value) || 0);
+
+            hiitEstado.corriendo = false;
+            hiitEstado.cicloActual = 1;
+            hiitEstado.faseIndex = 0;
+            if (hiitConfig.prepSeg > 0) {
+                hiitEstado.enPreparacion = true;
+                hiitEstado.segRestantesFase = hiitConfig.prepSeg;
+            } else {
+                hiitEstado.enPreparacion = false;
+                hiitEstado.segRestantesFase = hiitConfig.fases[0].segundos;
+            }
+            const btn = document.getElementById('btnHiitPlayPause');
+            if (btn) { btn.innerText = "▶ Iniciar Intervalos"; btn.classList.add('btn-exito'); btn.classList.remove('btn-alerta'); }
+            actualizarDisplayHIIT();
+        };
+
+        window.togglePlayHIIT = function() {
+            vibrar('click');
+            const btn = document.getElementById('btnHiitPlayPause');
+            if (hiitEstado.corriendo) {
+                clearInterval(hiitEstado.intervalId);
+                hiitEstado.corriendo = false;
+                btn.innerText = "▶ Reanudar";
+                btn.classList.add('btn-exito');
+                btn.classList.remove('btn-alerta');
+            } else {
+                hiitEstado.corriendo = true;
+                btn.innerText = "⏸ Pausar";
+                btn.classList.remove('btn-exito');
+                btn.classList.add('btn-alerta');
+                hiitEstado.intervalId = setInterval(tickHIIT, 1000);
+            }
+        };
+
+        function tickHIIT() {
+            hiitEstado.segRestantesFase--;
+            if (hiitEstado.segRestantesFase > 0 && hiitEstado.segRestantesFase <= 3) {
+                reproducirTonoCorto(600, 0.1);
+            }
+            if (hiitEstado.segRestantesFase <= 0) {
+                if (hiitEstado.enPreparacion) {
+                    hiitEstado.enPreparacion = false;
+                    hiitEstado.faseIndex = 0;
+                    hiitEstado.segRestantesFase = hiitConfig.fases[0].segundos;
+                    vibrar('exito');
+                    reproducirTonoCorto(1050, 0.35);
+                } else {
+                    if (hiitEstado.faseIndex + 1 < hiitConfig.fases.length) {
+                        hiitEstado.faseIndex++;
+                        hiitEstado.segRestantesFase = hiitConfig.fases[hiitEstado.faseIndex].segundos;
+                        vibrar('exito');
+                        const freq = hiitConfig.fases[hiitEstado.faseIndex].tipo === 'trabajo' ? 1050 : 700;
+                        reproducirTonoCorto(freq, 0.35);
+                    } else if (hiitEstado.cicloActual < hiitConfig.ciclos) {
+                        hiitEstado.cicloActual++;
+                        hiitEstado.faseIndex = 0;
+                        hiitEstado.segRestantesFase = hiitConfig.fases[0].segundos;
+                        vibrar('exito');
+                        reproducirTonoCorto(1050, 0.35);
+                    } else {
+                        clearInterval(hiitEstado.intervalId);
+                        hiitEstado.corriendo = false;
+                        vibrar('alarma');
+                        reproducirBeep();
+                        document.getElementById('hiitNombreFaseActual').innerText = "🏁 ¡BLOQUE COMPLETADO!";
+                        document.getElementById('btnHiitPlayPause').innerText = "▶ Iniciar de Nuevo";
+                        document.getElementById('btnHiitPlayPause').classList.add('btn-exito');
+                        document.getElementById('btnHiitPlayPause').classList.remove('btn-alerta');
+                        return;
+                    }
+                }
+            }
+            actualizarDisplayHIIT();
+        }
+
+        function reproducirTonoCorto(freq, dur) {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                gain.gain.setValueAtTime(0.4, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+                osc.stop(ctx.currentTime + dur);
+            } catch (e) {}
+        }
+
+        // --- SISTEMA HÁPTICO Y NOTIFICACIONES ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+            reiniciarCronometroHIIT();
+        });
+
+        function vibrar(tipo) {
+            if (!navigator.vibrate) return;
+            switch(tipo) {
+                case 'click': navigator.vibrate(25); break;
+                case 'exito': navigator.vibrate([70, 40, 70]); break;
+                case 'alarma': navigator.vibrate([400, 200, 400, 200, 400]); break;
+                case 'error': navigator.vibrate([50, 50, 50, 50, 50]); break;
+            }
+        }
+
+        function lanzarNotificacionLocal(titulo, cuerpo) {
+            if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification(titulo, {
+                        body: cuerpo,
+                        icon: './manifest-icon-192.maskable.png',
+                        badge: './manifest-icon-192.maskable.png',
+                        vibrate: [400, 200, 400],
+                        tag: 'gym-descanso',
+                        renotify: true
+                    });
+                });
+            }
+        }
+
+        function poblarSelectores() {
+            const selectores = ['selectorRutina', 'editorSelectorRutina'];
+            selectores.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = '';
+                for (const key in misRutinas) {
+                    const op = document.createElement('option');
+                    op.value = key;
+                    op.text = misRutinas[key].nombre;
+                    sel.appendChild(op);
+                }
+            });
+            cargarRutinaDiaria(null);
+            mostrarEjerciciosEditor();
+        }
+
+        window.guardarRutinasEnNube = function() {
+            if (!auth.currentUser) return;
+            setDoc(doc(db, "usuarios", auth.currentUser.uid), {
+                rutinasCustom: misRutinas,
+                versionPlan: VERSION_PLAN_MAESTRO
+            }, { merge: true }).catch(e => console.error(e));
+        };
+
+        window.restaurarPlanMaestroDefinitivo = function() {
+            if (confirm("¿Cargar y actualizar todas las sesiones al Plan Maestro Definitivo (PDF + Campo 30x20m)?")) {
+                misRutinas = JSON.parse(JSON.stringify(RUTINAS_DEFAULT));
+                guardarRutinasEnNube();
+                poblarSelectores();
+                alert("¡Planificación definitiva cargada con éxito!");
+            }
+        };
+
+        window.guardarPerfil = function() {
+            const nuevoPeso = parseFloat(document.getElementById('inputPesoCorporal').value);
+            const hombros = parseFloat(document.getElementById('inputHombros').value);
+            const cintura = parseFloat(document.getElementById('inputCintura').value);
+            
+            if(isNaN(nuevoPeso) || nuevoPeso <= 0) { alert("Ingresá un peso válido."); return; }
+            
+            const datosGuardar = { pesoCorporal: nuevoPeso };
+            if(!isNaN(hombros) && hombros > 0) datosGuardar.hombros = hombros;
+            if(!isNaN(cintura) && cintura > 0) datosGuardar.cintura = cintura;
+
+            setDoc(doc(db, "usuarios", auth.currentUser.uid), datosGuardar, { merge: true }).then(() => {
+                pesoCorporalUsuario = nuevoPeso;
+                alert("¡Perfil biométrico actualizado!");
+            }).catch(e => console.error(e));
+        };
+
+        window.iniciarSesion = function() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            signInWithEmailAndPassword(auth, email, pass).catch(e => {
+                document.getElementById('loginError').style.display = "block";
+                document.getElementById('loginError').innerText = "Error: " + e.message;
+            });
+        };
+
+        window.cerrarSesion = function() {
+            if(confirm("¿Cerrar sesión de App Entrenamiento?")) { signOut(auth); }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('vistaLogin').classList.add('oculto');
+                document.getElementById('appPrincipal').classList.remove('oculto');
+                unsubscribeRutinas = onSnapshot(doc(db, "usuarios", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.rutinasCustom && data.versionPlan === VERSION_PLAN_MAESTRO) {
+                            misRutinas = data.rutinasCustom;
+                        } else {
+                            // Actualización automática a la nueva planificación completa
+                            misRutinas = JSON.parse(JSON.stringify(RUTINAS_DEFAULT));
+                            guardarRutinasEnNube();
+                        }
+
+                        if(data.pesoCorporal) {
+                            pesoCorporalUsuario = data.pesoCorporal;
+                            document.getElementById('inputPesoCorporal').value = pesoCorporalUsuario;
+                        }
+                        if(data.hombros) document.getElementById('inputHombros').value = data.hombros;
+                        if(data.cintura) document.getElementById('inputCintura').value = data.cintura;
+                        if(data.hombros && data.cintura) {
+                            let ratio = (data.hombros / data.cintura).toFixed(2);
+                            document.getElementById('uiVTaperDisplay').innerText = ratio;
+                        }
+                    } else {
+                        misRutinas = JSON.parse(JSON.stringify(RUTINAS_DEFAULT));
+                        guardarRutinasEnNube();
+                    }
+                    poblarSelectores();
+                });
+                cargarHistorial(user.uid);
+            } else {
+                if(unsubscribeRutinas) unsubscribeRutinas();
+                document.getElementById('vistaLogin').classList.remove('oculto');
+                document.getElementById('appPrincipal').classList.add('oculto');
+            }
+        });
+
+        function cargarHistorial(uid) {
+            const q = query(collection(db, "usuarios", uid, "historial_gym"), orderBy("fecha", "desc"), limit(50));
+            onSnapshot(q, (snapshot) => {
+                const contenedor = document.getElementById('listaHistorial');
+                contenedor.innerHTML = '';
+                if(snapshot.empty) {
+                    contenedor.innerHTML = '<p style="color:var(--texto-secundario);">No hay entrenamientos recientes.</p>';
+                    return;
+                }
+                
+                let labelsGrafico = []; let dataGrafico = []; let docs = [];
+                snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+                
+                docs.slice(0, 6).forEach(data => {
+                    const fechaStr = new Date(data.fecha).toLocaleDateString('es-AR', { weekday: 'short', month: 'short', day: 'numeric' });
+                    const volumenCarga = data.volumen ? `${data.volumen} kg` : 'Completado';
+                    const calorias = data.calorias ? `🔥 ${data.calorias} kcal` : '';
+                    
+                    let htmlNota = '';
+                    if(data.fatiga || data.notas) {
+                        const iconFatiga = data.fatiga ? data.fatiga : '';
+                        const textNota = data.notas ? ` - ${data.notas}` : '';
+                        htmlNota = `<p class="historial-nota">${iconFatiga}${textNota}</p>`;
+                    }
+
+                    contenedor.innerHTML += `
+                        <div class="historial-item">
+                            <div class="historial-info" style="flex:1;">
+                                <strong style="font-size:14.5px; color:white;">${data.rutina}</strong>
+                                <p>📅 ${fechaStr} | ⏱️ ${Math.round(data.duracionMinutos)} min <span style="color:var(--alerta); margin-left:5px;">${calorias}</span></p>
+                                ${htmlNota}
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                                <button onclick="eliminarHistorial('${data.id}')" style="background:none; border:none; color:var(--peligro); font-size:15px; cursor:pointer; padding:0;">🗑️</button>
+                                <div class="historial-volumen">${volumenCarga}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                docs.slice(0, 15).reverse().forEach(data => {
+                    const fechaCorta = new Date(data.fecha).toLocaleDateString('es-AR', { month: 'short', day: 'numeric' });
+                    labelsGrafico.push(fechaCorta);
+                    dataGrafico.push(data.volumen || 0);
+                });
+                
+                renderizarGraficoVolumen(labelsGrafico, dataGrafico);
+                renderizarCalendario(docs);
+            });
+        }
+
+        window.eliminarHistorial = function(docId) {
+            if(confirm("¿Eliminar permanentemente esta sesión de tu registro?")) {
+                deleteDoc(doc(db, "usuarios", auth.currentUser.uid, "historial_gym", docId));
+            }
+        };
+
+        function renderizarCalendario(entrenamientos) {
+            const contenedor = document.getElementById('calendarioDias');
+            contenedor.innerHTML = '';
+            const fecha = new Date();
+            const mesActual = fecha.getMonth();
+            const anioActual = fecha.getFullYear();
+            const primerDiaDelMes = new Date(anioActual, mesActual, 1).getDay();
+            const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
+
+            const diasEntrenados = entrenamientos
+                .filter(e => new Date(e.fecha).getMonth() === mesActual && new Date(e.fecha).getFullYear() === anioActual)
+                .map(e => new Date(e.fecha).getDate());
+
+            for(let i=0; i<primerDiaDelMes; i++) { contenedor.innerHTML += `<div></div>`; }
+            for(let i=1; i<=diasEnMes; i++) {
+                let clase = 'dia-cal';
+                if(diasEntrenados.includes(i)) clase += ' entrenado';
+                if(i === fecha.getDate()) clase += ' hoy';
+                contenedor.innerHTML += `<div class="${clase}">${i}</div>`;
+            }
+        }
+
+        function renderizarGraficoVolumen(labels, data) {
+            if(!document.getElementById('chartVolumen')) return;
+            const ctx = document.getElementById('chartVolumen').getContext('2d');
+            if(graficoVolumen) graficoVolumen.destroy();
+            graficoVolumen = new Chart(ctx, { 
+                type: 'bar', 
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        label: 'Tonelaje Efectivo (kg)', 
+                        data: data, 
+                        backgroundColor: 'rgba(0, 122, 255, 0.7)', 
+                        borderColor: '#007AFF',
+                        borderWidth: 1,
+                        borderRadius: 6 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { color: '#A1A1A6' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }, 
+                        x: { ticks: { color: '#A1A1A6' }, grid: { display: false } } 
+                    } 
+                } 
+            });
+        }
+
+        window.mostrarEjerciciosEditor = function() {
+            const idRutina = document.getElementById('editorSelectorRutina').value;
+            if(!idRutina || !misRutinas[idRutina]) return;
+            const rutina = misRutinas[idRutina];
+            const contenedor = document.getElementById('listaEjerciciosEditor');
+            contenedor.innerHTML = '';
+            rutina.ejercicios.forEach((ej, index) => {
+                let unidadStr = ej.unidad || 'kg';
+                let descEjStr = ej.descansoEjercicio ? ` | Cambio: ${ej.descansoEjercicio}s` : '';
+                let btnUp = index > 0 ? `<button class="btn-principal" style="width: auto; padding: 8px; font-size: 13px; background: rgba(255,255,255,0.1); box-shadow: none;" onclick="moverEjercicioEditor('${idRutina}', ${index}, -1)">⬆️</button>` : `<div style="width: 34px;"></div>`;
+                let btnDown = index < rutina.ejercicios.length - 1 ? `<button class="btn-principal" style="width: auto; padding: 8px; font-size: 13px; background: rgba(255,255,255,0.1); box-shadow: none;" onclick="moverEjercicioEditor('${idRutina}', ${index}, 1)">⬇️</button>` : `<div style="width: 34px;"></div>`;
+                contenedor.innerHTML += `
+                    <div class="lista-editor-item">
+                        <div style="flex: 1; padding-right: 10px;">
+                            <p>${index + 1}. ${ej.nombre}</p>
+                            <small>${ej.series}x${ej.reps} | ${ej.peso} ${unidadStr} | Pausa: ${ej.descanso}s${descEjStr}</small>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            ${btnUp}${btnDown}
+                            <button class="btn-principal btn-peligro" style="width: auto; padding: 8px; font-size: 13px; margin-left: 4px; box-shadow: none;" onclick="eliminarEjercicioEditor('${idRutina}', ${index})">✖</button>
+                        </div>
+                    </div>`;
+            });
+        };
+        
+        window.moverEjercicioEditor = function(id, index, dir) {
+            const r = misRutinas[id]; if (!r) return;
+            const n = index + dir; if (n < 0 || n >= r.ejercicios.length) return;
+            const temp = r.ejercicios[index]; r.ejercicios[index] = r.ejercicios[n]; r.ejercicios[n] = temp;
+            guardarRutinasEnNube(); mostrarEjerciciosEditor();
+        };
+
+        window.eliminarEjercicioEditor = function(id, index) {
+            if(confirm("¿Eliminar este ejercicio de la sesión?")) {
+                misRutinas[id].ejercicios.splice(index, 1);
+                guardarRutinasEnNube();
+                mostrarEjerciciosEditor();
+            }
+        };
+        
+        window.agregarEjercicioEditor = function() {
+            const id = document.getElementById('editorSelectorRutina').value; 
+            const nom = document.getElementById('nuevoEjNombre').value.trim(); 
+            const ser = parseInt(document.getElementById('nuevoEjSeries').value); 
+            const rep = parseInt(document.getElementById('nuevoEjReps').value); 
+            const pes = parseFloat(document.getElementById('nuevoEjPeso').value); 
+            const uni = document.getElementById('nuevoEjUnidad').value;
+            const des = parseInt(document.getElementById('nuevoEjDescanso').value); 
+            const desEj = parseInt(document.getElementById('nuevoEjDescansoEj').value) || (des + 30);
+            const tip = document.getElementById('nuevoEjTipo').value;
+            
+            if(!nom || isNaN(ser) || isNaN(rep) || isNaN(pes) || isNaN(des)) { alert("Completá todos los campos."); return; }
+            misRutinas[id].ejercicios.push({
+                nombre: nom, series: ser, reps: rep, peso: pes, unidad: uni,
+                descanso: des, descansoEjercicio: desEj, tipo: tip
+            }); 
+            guardarRutinasEnNube();
+            mostrarEjerciciosEditor();
+            document.getElementById('nuevoEjNombre').value='';
+            document.getElementById('nuevoEjSeries').value='';
+            document.getElementById('nuevoEjReps').value='';
+            document.getElementById('nuevoEjPeso').value='';
+            document.getElementById('nuevoEjDescanso').value='';
+            document.getElementById('nuevoEjDescansoEj').value='';
+            alert("¡Ejercicio agregado!");
+        };
+
+        window.cargarRutinaDiaria = function(diaSeleccionado) {
+            if(Object.keys(misRutinas).length === 0) return; 
+            const diaHoy = new Date().getDay();
+            const diaActivo = diaSeleccionado !== null ? diaSeleccionado : diaHoy;
+            const contDias = document.getElementById('uiSelectorDias');
+            contDias.innerHTML = '';
+            
+            nombresDias.forEach((nombre, index) => {
+                let clase = 'dia-btn';
+                if(index === diaActivo) clase += ' activo';
+                contDias.innerHTML += `<button class="${clase}" onclick="cargarRutinaDiaria(${index})">${nombre.substring(0, 3)}${(index === diaHoy)?' (Hoy)':''}</button>`;
+            });
+            
+            document.getElementById('tituloDiaPlan').innerText = (diaActivo === diaHoy) ? `Sesiones de Hoy (${nombresDias[diaActivo]})` : `Sesiones del ${nombresDias[diaActivo]}`;
+            document.getElementById('badgeCodigoMD').innerText = codigosMDDia[diaActivo] || "MD";
+            
+            const contenedor = document.getElementById('contenedorRutinasHoy');
+            contenedor.innerHTML = '';
+            
+            const rutinasDelDia = planSemanal[diaActivo] || [];
+            const mananaList = rutinasDelDia.filter(id => misRutinas[id] && misRutinas[id].turno === "manana");
+            const tardeList = rutinasDelDia.filter(id => misRutinas[id] && misRutinas[id].turno !== "manana");
+
+            if (mananaList.length > 0) {
+                contenedor.innerHTML += `<div class="turno-divisor">☀️ Turno Mañana (Casa / Cancha)</div>`;
+                mananaList.forEach(id => renderizarTarjetaSesion(contenedor, id, misRutinas[id]));
+            }
+            if (tardeList.length > 0) {
+                contenedor.innerHTML += `<div class="turno-divisor">🌙 Turno Tarde (Quinta 30x20m / Casa)</div>`;
+                tardeList.forEach(id => renderizarTarjetaSesion(contenedor, id, misRutinas[id]));
+            }
+        };
+
+        function renderizarTarjetaSesion(contenedor, id, r) {
+            const catClase = r.categoria ? `cat-${r.categoria}` : '';
+            const totalSeries = r.ejercicios.reduce((acc, e) => acc + (parseInt(e.series) || 1), 0);
+            contenedor.innerHTML += `
+                <div class="rutina-hoy-card ${catClase}">
+                    <div style="flex:1;">
+                        <strong>${r.nombre}</strong>
+                        <span>${r.infoExtra || `${r.ejercicios.length} ejercicios`}</span>
+                        <div>
+                            <span class="badge-meta">📋 ${r.ejercicios.length} ejerc.</span>
+                            <span class="badge-meta">🔄 ${totalSeries} series totales</span>
+                        </div>
+                    </div>
+                    <button class="btn-principal btn-exito btn-play-chico" title="Ver lista de ejercicios e iniciar" onclick="abrirVistaPreviaRutina('${id}')">▶</button>
+                </div>`;
+        }
+
+        // =========================================================================
+        // MEJORA 1: PANTALLA INTERMEDIA DE VISTA PREVIA ANTES DEL PRIMER EJERCICIO
+        // =========================================================================
+        window.abrirVistaPreviaRutina = function(idRutina) {
+            if (!idRutina || !misRutinas[idRutina]) return;
+            vibrar('click');
+            idRutinaEnVistaPrevia = idRutina;
+            const rutina = misRutinas[idRutina];
+
+            document.getElementById('previaTituloRutina').innerText = rutina.nombre;
+            document.getElementById('previaSubtituloInfo').innerText = rutina.infoExtra || "Revisá la lista de ejercicios, cargas y descansos antes de comenzar.";
+            document.getElementById('previaCantidadEjercicios').innerText = `${rutina.ejercicios.length} ejercicios`;
+
+            const contLista = document.getElementById('contenedorListaPrevia');
+            contLista.innerHTML = '';
+
+            rutina.ejercicios.forEach((ej, idx) => {
+                const descSerie = ej.descanso || 0;
+                const descCambio = ej.descansoEjercicio !== undefined ? ej.descansoEjercicio : (descSerie + 30);
+                const cargaTexto = ej.peso > 0 ? `${ej.peso} ${ej.unidad || 'kg'}` : `${ej.reps} ${ej.unidad || 'reps'}`;
+                contLista.innerHTML += `
+                    <div class="previa-lista-item">
+                        <div class="previa-num">${idx + 1}</div>
+                        <div class="previa-info">
+                            <strong>${ej.nombre}</strong>
+                            <div class="previa-tags">
+                                <span class="previa-tag" style="color:white; font-weight:700;">${ej.series} series × ${ej.reps}</span>
+                                <span class="previa-tag" style="color:var(--alerta);">Carga/Meta: ${cargaTexto}</span>
+                                <span class="previa-tag">⏱️ Entre series: ${descSerie}s</span>
+                                <span class="previa-tag">🔄 Al cambiar: ${descCambio}s</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('vistaSeleccion').classList.add('oculto');
+            document.getElementById('vistaPreviaRutina').classList.remove('oculto');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.cerrarVistaPrevia = function() {
+            vibrar('click');
+            document.getElementById('vistaPreviaRutina').classList.add('oculto');
+            document.getElementById('vistaSeleccion').classList.remove('oculto');
+        };
+
+        window.confirmarEIniciarRutina = function() {
+            if (!idRutinaEnVistaPrevia) return;
+            document.getElementById('vistaPreviaRutina').classList.add('oculto');
+            iniciarRutina(idRutinaEnVistaPrevia);
+        };
+
+        window.cambiarVistaPrincipal = function(vista) {
+            document.getElementById('vistaEstadisticas').classList.add('oculto'); 
+            document.getElementById('vistaSeleccion').classList.add('oculto'); 
+            document.getElementById('vistaPreviaRutina').classList.add('oculto');
+            document.getElementById('vistaEditor').classList.add('oculto');
+            document.getElementById('vistaPerfil').classList.add('oculto');
+            document.getElementById('vistaEntrenamiento').classList.add('oculto');
+            document.getElementById('vistaDescanso').classList.add('oculto');
+            
+            document.getElementById('btnTabEntrenar').classList.remove('activo'); 
+            document.getElementById('btnTabMetricas').classList.remove('activo');
+            document.getElementById('btnTabGestor').classList.remove('activo');
+            document.getElementById('btnTabPerfil').classList.remove('activo');
+
+            if(vista === 'entrenar') { document.getElementById('vistaSeleccion').classList.remove('oculto'); document.getElementById('btnTabEntrenar').classList.add('activo'); } 
+            else if (vista === 'metricas') { document.getElementById('vistaEstadisticas').classList.remove('oculto'); document.getElementById('btnTabMetricas').classList.add('activo'); } 
+            else if (vista === 'gestor') { document.getElementById('vistaEditor').classList.remove('oculto'); document.getElementById('btnTabGestor').classList.add('activo'); mostrarEjerciciosEditor(); }
+            else if (vista === 'perfil') { document.getElementById('vistaPerfil').classList.remove('oculto'); document.getElementById('btnTabPerfil').classList.add('activo'); }
+        };
+
+        window.iniciarRutina = async function(idRutina) {
+            estadoActual.idRutina = idRutina;
+            estadoActual.datosRutina = misRutinas[idRutina];
+            estadoActual.ejercicioIndex = 0;
+            estadoActual.serieActual = 1; 
+            estadoActual.horaInicio = Date.now();
+            estadoActual.volumenAcumulado = 0; 
+            
+            try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (err) {}
+            
+            segundosTotales = 0;
+            clearInterval(temporizadorTotal);
+            temporizadorTotal = setInterval(() => {
+                segundosTotales++;
+                let m = Math.floor(segundosTotales / 60).toString().padStart(2, '0');
+                let s = (segundosTotales % 60).toString().padStart(2, '0');
+                document.getElementById('uiTiempoTotal').innerText = `⏱️ Sesión: ${m}:${s}`;
+            }, 1000);
+
+            document.getElementById('vistaSeleccion').classList.add('oculto');
+            document.getElementById('vistaEditor').classList.add('oculto');
+            document.getElementById('vistaEntrenamiento').classList.remove('oculto');
+            actualizarUIEjercicio();
+            document.getElementById('navInferior').classList.add('oculto');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        function actualizarUIEjercicio() {
+            const ejercicio = estadoActual.datosRutina.ejercicios[estadoActual.ejercicioIndex];
+            document.getElementById('uiRutinaNombre').innerText = `${estadoActual.datosRutina.nombre} • Ejercicio ${estadoActual.ejercicioIndex + 1} de ${estadoActual.datosRutina.ejercicios.length}`;
+            document.getElementById('uiEjercicioNombre').innerText = ejercicio.nombre;
+            document.getElementById('uiEjercicioTipo').innerText = ejercicio.tipo; 
+            
+            const descSerie = ejercicio.descanso || 0;
+            const descCambio = ejercicio.descansoEjercicio !== undefined ? ejercicio.descansoEjercicio : (descSerie + 30);
+            document.getElementById('uiDescansosInfoBadge').innerText = `Pausa Serie: ${descSerie}s | Cambio Ej: ${descCambio}s`;
+
+            document.getElementById('uiRepsInput').value = ejercicio.reps; 
+            document.getElementById('uiPesoInput').value = ejercicio.peso;
+            document.getElementById('uiUnidadInput').value = ejercicio.unidad || 'kg';
+            document.getElementById('uiRirInput').value = "efectiva";
+
+            // Poblar guía técnica y personita animada SVG para el ejercicio actual
+            const guia = obtenerGuiaYAnimacionEjercicio(ejercicio.nombre);
+            document.getElementById('uiGuiaTempo').innerText = guia.tempo;
+            document.getElementById('uiGuiaPostura').innerText = guia.postura;
+            document.getElementById('uiGuiaAgarre').innerText = guia.agarre;
+            document.getElementById('uiGuiaClave').innerText = guia.clave;
+            document.getElementById('contenedorSvgAnimado').innerHTML = guia.svg;
+
+            const contenedorSeries = document.getElementById('uiSeriesVisuales');
+            contenedorSeries.innerHTML = '';
+            for(let i=1; i <= ejercicio.series; i++) {
+                let clase = 'bolita-serie';
+                if(i < estadoActual.serieActual) clase += ' completada';
+                if(i === estadoActual.serieActual) clase += ' activa';
+                contenedorSeries.innerHTML += `<div class="${clase}">${i}</div>`;
+            }
+            document.getElementById('btnAccionPrincipal').innerText = `✔️ Completar Serie ${estadoActual.serieActual} de ${ejercicio.series}`;
+        }
+
+        // --- MOTOR DE SERIES Y TONELAJE EXACTO (KG + CONVERSIÓN DE DISCOS) ---
+        window.manejarBotonPrincipal = function() {
+            const ejercicio = estadoActual.datosRutina.ejercicios[estadoActual.ejercicioIndex];
+            const rirSeleccionado = document.getElementById('uiRirInput').value;
+            const repsHechas = parseInt(document.getElementById('uiRepsInput').value) || ejercicio.reps;
+            const pesoUsado = parseFloat(document.getElementById('uiPesoInput').value) || 0;
+            const unidadUsada = document.getElementById('uiUnidadInput').value;
+            
+            if (!repsHechas) {
+                vibrar('error');
+                document.getElementById('uiRepsInput').classList.add('animar-error');
+                setTimeout(() => document.getElementById('uiRepsInput').classList.remove('animar-error'), 400);
+                return;
+            }
+
+            vibrar('exito');
+            const btn = document.getElementById('btnAccionPrincipal');
+            btn.classList.add('animar-exito');
+            btn.innerText = "¡Serie Registrada!";
+            
+            if(rirSeleccionado !== "calentamiento") {
+                if (unidadUsada === 'kg') {
+                    estadoActual.volumenAcumulado += Math.round(repsHechas * pesoUsado);
+                } else if (unidadUsada === 'discos') {
+                    // Conversión automática: 1 disco de polea = 5 kg para métricas de tonelaje
+                    estadoActual.volumenAcumulado += Math.round(repsHechas * (pesoUsado * 5));
+                }
+                
+                if(pesoUsado !== ejercicio.peso || repsHechas !== ejercicio.reps || unidadUsada !== ejercicio.unidad) {
+                    ejercicio.peso = pesoUsado;
+                    ejercicio.reps = repsHechas;
+                    ejercicio.unidad = unidadUsada;
+                    guardarRutinasEnNube();
+                }
+            }
+            
+            setTimeout(() => {
+                btn.classList.remove('animar-exito');
+                
+                if (estadoActual.serieActual < ejercicio.series) {
+                    estadoActual.serieActual++;
+                    const pausaSeg = ejercicio.descanso !== undefined ? ejercicio.descanso : 90;
+                    if (pausaSeg > 0) {
+                        iniciarDescanso(
+                            pausaSeg,
+                            "Descanso entre Series",
+                            `Siguiente: Serie ${estadoActual.serieActual} de ${ejercicio.nombre} (${pesoUsado} ${unidadUsada})`,
+                            false,
+                            ejercicio.pausaActiva || null
+                        );
+                    } else {
+                        actualizarUIEjercicio();
+                    }
+                } else {
+                    if (estadoActual.ejercicioIndex < estadoActual.datosRutina.ejercicios.length - 1) {
+                        // Usa exactamente la columna "Descanso entre ejercicios" del PDF[cite: 1, 2]
+                        const tiempoTransicion = ejercicio.descansoEjercicio !== undefined
+                            ? ejercicio.descansoEjercicio
+                            : ((ejercicio.descanso || 60) + 60);
+
+                        estadoActual.ejercicioIndex++;
+                        estadoActual.serieActual = 1;
+                        const proxEjercicio = estadoActual.datosRutina.ejercicios[estadoActual.ejercicioIndex];
+                        const proxUnidad = proxEjercicio.unidad || 'kg';
+
+                        if (tiempoTransicion > 0) {
+                            iniciarDescanso(
+                                tiempoTransicion,
+                                "Descanso entre Ejercicios (Cambio de Estación)",
+                                `Siguiente Ejercicio: ${proxEjercicio.nombre} (${proxEjercicio.series}x${proxEjercicio.reps} - ${proxEjercicio.peso} ${proxUnidad})`,
+                                true,
+                                null
+                            );
+                        } else {
+                            actualizarUIEjercicio();
+                        }
+                    } else {
+                        mostrarModalFatiga();
+                    }
+                }
+            }, 350);
+        };
+
+        function reproducirBeep() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                function hacerPitido(freq, inicio, dur) {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + inicio);
+                    gain.gain.setValueAtTime(1, ctx.currentTime + inicio);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + inicio + dur);
+                    osc.stop(ctx.currentTime + inicio + dur);
+                }
+                hacerPitido(800, 0, 0.2);
+                hacerPitido(800, 0.3, 0.2);
+                hacerPitido(1200, 0.6, 0.5);
+            } catch (e) {}
+        }
+
+        // --- RELOJ ANTI-SUSPENSIÓN CON DIFERENCIACIÓN ENTRE SERIES VS ENTRE EJERCICIOS ---
+        function iniciarDescanso(segundos, titulo, subtitulo, esCambioEjercicio, textoPausaActiva) {
+            document.getElementById('vistaEntrenamiento').classList.add('oculto'); 
+            document.getElementById('vistaDescanso').classList.remove('oculto');
+            
+            const badge = document.getElementById('badgeTipoPausa');
+            if (esCambioEjercicio) {
+                badge.innerText = "🔄 Cambio de Ejercicio • Preparar Estación";
+                badge.style.background = "rgba(255, 159, 10, 0.2)";
+                badge.style.color = "var(--alerta)";
+            } else {
+                badge.innerText = "⏱️ Descanso entre Series";
+                badge.style.background = "rgba(0, 122, 255, 0.2)";
+                badge.style.color = "#4DA3FF";
+            }
+
+            const alertaMov = document.getElementById('alertaMovilidadDescanso');
+            if (textoPausaActiva) {
+                document.getElementById('textoMovilidadDescanso').innerText = textoPausaActiva;
+                alertaMov.classList.remove('oculto');
+            } else {
+                alertaMov.classList.add('oculto');
+            }
+
+            document.getElementById('mensajeDescanso').innerText = titulo; 
+            document.getElementById('proximoPasoMensaje').innerText = subtitulo; 
+            
+            marcaTiempoFinDescanso = Date.now() + (segundos * 1000);
+            
+            try { 
+                const actx = window.AudioContext || window.webkitAudioContext;
+                if(actx) { const tempCtx = new actx(); tempCtx.resume(); }
+            } catch(e) {}
+
+            actualizarRelojUI();
+            
+            clearInterval(temporizador);
+            temporizador = setInterval(() => { 
+                actualizarRelojUI(); 
+            }, 500); 
+        }
+
+        function actualizarRelojUI() { 
+            const ahora = Date.now();
+            tiempoRestante = Math.ceil((marcaTiempoFinDescanso - ahora) / 1000);
+
+            if (tiempoRestante <= 0) { 
+                terminarDescanso(); 
+                return;
+            }
+
+            const m = Math.floor(tiempoRestante / 60).toString().padStart(2, '0'); 
+            const s = (tiempoRestante % 60).toString().padStart(2, '0'); 
+            document.getElementById('relojDisplay').innerText = `${m}:${s}`; 
+        }
+
+        window.sumarTiempo = function(segundos) { 
+            vibrar('click');
+            marcaTiempoFinDescanso += (segundos * 1000); 
+            actualizarRelojUI(); 
+        };
+
+        window.saltarDescanso = function() { 
+            vibrar('click');
+            terminarDescanso(); 
+        };
+
+        function terminarDescanso() {
+            clearInterval(temporizador); 
+            vibrar('alarma');
+            reproducirBeep(); 
+            
+            const subtituloStr = document.getElementById('proximoPasoMensaje').innerText;
+            lanzarNotificacionLocal("¡Tiempo cumplido!", subtituloStr); 
+
+            document.getElementById('vistaDescanso').classList.add('oculto'); 
+            document.getElementById('vistaEntrenamiento').classList.remove('oculto');
+            actualizarUIEjercicio();
+        }
+
+        window.mostrarModalFatiga = function() {
+            clearInterval(temporizador);
+            clearInterval(temporizadorTotal);
+            document.getElementById('modalFatiga').classList.remove('oculto');
+            document.getElementById('inputNotasRutina').value = "";
+        };
+
+        window.guardarFatigaYFinalizar = async function(nivelFatiga) {
+            document.getElementById('modalFatiga').classList.add('oculto');
+            const notasUsuario = document.getElementById('inputNotasRutina').value.trim();
+            const duracionMin = Math.max(1, segundosTotales / 60);
+            const caloriasQuemadas = Math.round(5.2 * pesoCorporalUsuario * (duracionMin / 60));
+
+            try {
+                await addDoc(collection(db, "usuarios", auth.currentUser.uid, "historial_gym"), {
+                    rutina: estadoActual.datosRutina.nombre, 
+                    fecha: Date.now(), 
+                    duracionMinutos: duracionMin, 
+                    volumen: estadoActual.volumenAcumulado, 
+                    calorias: caloriasQuemadas,
+                    fatiga: nivelFatiga,
+                    notas: notasUsuario
+                });
+            } catch (e) { console.error(e); }
+
+            if(wakeLock !== null) { wakeLock.release(); wakeLock = null; }
+            document.getElementById('navInferior').classList.remove('oculto');
+            cambiarVistaPrincipal('entrenar'); 
+        };
+
+        window.cancelarRutina = function() {
+            if(confirm("⚠️ ¿Abandonar el entrenamiento actual? Los datos no se guardarán.")) {
+                clearInterval(temporizador);
+                clearInterval(temporizadorTotal);
+                if(wakeLock !== null) { wakeLock.release(); wakeLock = null; }
+                document.getElementById('navInferior').classList.remove('oculto');
+                document.getElementById('vistaEntrenamiento').classList.add('oculto');
+                document.getElementById('vistaDescanso').classList.add('oculto');
+                cambiarVistaPrincipal('entrenar');
+            }
+        };
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js');
+            });
+        }
+    </script>
+</body>
+</html>
